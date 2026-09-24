@@ -100,6 +100,8 @@ Hệ thống phải dừng với thông báo rõ ràng khi thiếu cấu hình b
 
 Mục tiêu là xây nền dữ liệu, tài khoản, quyền truy cập và API contract đủ để các vertical slice sau không phải tự tạo lại hạ tầng.
 
+**Màn hình:** SCR-01 (đăng ký/đăng nhập), SCR-02 (App Shell/lịch sử), SCR-03 (hồ sơ du lịch).
+
 ### Step 2.1 - Create Migration and Persistence Foundation
 
 **Mô tả** Chọn ORM và migration tool dùng thống nhất cho backend, sau đó tạo migration đầu tiên.  
@@ -206,1331 +208,661 @@ CI cần phát hiện khi generated client không còn đồng bộ với API co
 
 ---
 
-## Phase 3 - Agent Harness Foundation
+## Nguyên tắc triển khai từ Phase 3
 
-Mục tiêu là xây runtime dùng chung cho đúng ba Agent. Phase này dùng fake model và fake tools để kiểm thử trước khi tích hợp nhà cung cấp thật.
+Từ Phase 3, mọi phase là một **vertical increment** có thể kiểm thử và triển khai độc lập. FE và BE cùng bắt đầu từ một OpenAPI contract, interaction states và acceptance scenarios đã thống nhất.
 
-### Step 3.1 - Define Agent Contracts and Runtime
-
-**Mô tả** Định nghĩa contract chung cho request, result và trạng thái chạy của Agent.  
-Runtime phải xử lý được lifecycle, cancellation và timeout trong cùng một process mà không để run bị treo.  
-Contract chỉ lưu structured result cần thiết và không yêu cầu raw chain-of-thought.
-
-**Acceptance Criteria**
-- [ ] Runtime chạy được một fake Agent và trả structured result.
-- [ ] Timeout/cancellation tạo lỗi có mã và không để run treo.
-- [ ] Agent contract không chứa hoặc yêu cầu raw chain-of-thought.
-
-**Verification** Unit test success, timeout, cancellation và invalid result.
-
-**Dependencies** Phase 2.
-**Files Related** backend/app/ai/harness/runtime/, contracts/, tests/unit/ai/.
-
-### Step 3.2 - Implement Model Gateway
-
-**Mô tả** Tạo một Model Gateway làm điểm gọi LLM tập trung cho toàn bộ Agent.  
-Gateway quản lý structured output, token limit, timeout và retry có giới hạn thay vì để từng Agent gọi provider trực tiếp.  
-Mọi kết quả từ model phải được validation trước khi trả về runtime.
-
-**Acceptance Criteria**
-- [ ] Agent không gọi SDK nhà cung cấp trực tiếp.
-- [ ] Gateway validate structured output trước khi trả cho runtime.
-- [ ] Retry chỉ áp dụng lỗi tạm thời và có giới hạn.
-
-**Verification** Contract test bằng fake provider cho success, malformed output, rate limit và timeout.
-
-**Dependencies** Step 3.1.
-**Files Related** backend/app/ai/harness/model_gateway/, provider adapter, tests.
-
-### Step 3.3 - Implement Prompt Registry
-
-**Mô tả** Tạo Prompt Registry để quản lý system prompt, prompt template, output schema và version của từng Agent.  
-Agent chỉ tham chiếu prompt bằng ID và version, tránh nhúng nội dung prompt rải rác trong code.  
-Trace cần ghi nhận version đã dùng nhưng không được làm lộ secret hoặc nội dung nhạy cảm.
-
-**Acceptance Criteria**
-- [ ] Mỗi Agent tham chiếu prompt bằng ID/version, không nhúng prompt rải rác.
-- [ ] Missing prompt/version gây lỗi rõ ràng.
-- [ ] Version prompt xuất hiện trong trace nhưng không log secret.
-
-**Verification** Unit test load/version/fallback failure và snapshot phần prompt không nhạy cảm.
-
-**Dependencies** Steps 3.1–3.2.
-**Files Related** backend/app/ai/harness/prompts/, prompt definitions, tests.
-
-### Step 3.4 - Implement Skill Registry
-
-**Mô tả** Tạo Skill Registry cho các skill có thể tái sử dụng giữa các Agent.  
-Mỗi skill cần có ID, version, input/output contract và danh sách Agent được phép sử dụng.  
-Skill chỉ đại diện cho một capability, không được triển khai như một sub-agent mới.
-
-**Acceptance Criteria**
-- [ ] Skill có ID, version, input/output contract và allow-list Agent.
-- [ ] Runtime chỉ nạp skill Agent được phép dùng.
-- [ ] Có skill mẫu cho requirement extraction và feasibility evaluation.
-
-**Verification** Unit test registration, duplicate ID, permission và version selection.
-
-**Dependencies** Steps 3.1 và 3.3.
-**Files Related** backend/app/ai/harness/skills/, skill definitions, tests.
-
-### Step 3.5 - Implement Tool Registry and Provider Ports
-
-**Mô tả** Định nghĩa Tool Registry và các provider port cho travel, maps, weather, booking, vision và TTS.  
-Registry chịu trách nhiệm validation arguments, result và quyền sử dụng tool của từng Agent.  
-Các provider chưa được lựa chọn cần có fake adapter để việc phát triển và kiểm thử không bị chặn.
-
-**Acceptance Criteria**
-- [ ] Tool arguments và result được validate tại registry boundary.
-- [ ] Mỗi Agent có allow-list tool riêng.
-- [ ] Provider chưa chọn có fake adapter để phát triển không bị chặn.
-
-**Verification** Unit/contract test permission denied, invalid argument, provider error và success.
-
-**Dependencies** Steps 3.1–3.2.
-**Files Related** backend/app/ai/harness/tools/, backend/app/infrastructure/providers/, tests.
-
-### Step 3.6 - Implement Context Builder
-
-**Mô tả** Xây dựng context tối thiểu từ yêu cầu đã xác nhận, profile cần thiết và dữ liệu đã kiểm chứng.  
-Context phải giữ nguồn, confidence và plan version, đồng thời không được lấy dữ liệu từ tài khoản khác.  
-Token budget được áp dụng theo quy tắc xác định để loại bỏ dữ liệu thừa trước khi gọi model.
-
-**Acceptance Criteria**
-- [ ] Context không tự lấy dữ liệu của account khác.
-- [ ] Thông tin có nguồn và confidence được giữ cùng dữ liệu.
-- [ ] Token budget loại dữ liệu thừa theo quy tắc xác định được.
-
-**Verification** Unit test ownership, ordering, token budget và missing required context.
-
-**Dependencies** Steps 2.2, 3.3 và 3.5.
-**Files Related** backend/app/ai/harness/context/, query ports, tests.
-
-### Step 3.7 - Implement Memory Manager
-
-**Mô tả** Quản lý working memory và trip memory tạm thời theo user, trip và run.  
-Memory tạm phải tách khỏi profile đã xác nhận, có expires_at không quá 7 ngày và không được đọc sau khi hết hạn.  
-Chỉ preference được người dùng xác nhận mới được ghi vào profile thông qua use case riêng.
-
-**Acceptance Criteria**
-- [ ] Memory bị scope theo user/trip/run và có expires_at không quá 7 ngày.
-- [ ] Confirmed preference được ghi vào profile qua use case riêng, không giữ như long-term Agent memory.
-- [ ] Expired memory không được Context Builder đọc.
-
-**Verification** Integration test isolation, expiry và confirmed-profile extraction.
-
-**Dependencies** Steps 2.2 và 3.6.
-**Files Related** backend/app/ai/harness/memory/, database models, repositories, tests.
-
-### Step 3.8 - Add Guardrails, Output Validation and Trace
-
-**Mô tả** Thêm guardrails trước và sau model call, validation nghiệp vụ và trace tóm tắt.  
-Hệ thống phải chặn tool hoặc action ngoài quyền, đặc biệt là hành động tự động booking hay payment.  
-Trace chỉ lưu metadata, tool call, lỗi và summary reason; không lưu raw chain-of-thought.
-
-**Acceptance Criteria**
-- [ ] Chặn tool/action ngoài quyền và chặn booking/payment tự động.
-- [ ] Output biến động thiếu source, checked_at hoặc confidence bị từ chối.
-- [ ] Trace lưu input/output metadata, tool call, lỗi và summary reason; không lưu raw chain-of-thought.
-
-**Verification** Adversarial unit tests và integration test trace có expires_at tối đa 7 ngày.
-
-**Dependencies** Steps 3.1–3.7.
-**Files Related** guardrails/, validators/, tracing/, audit persistence, tests.
-
-### Checkpoint - Harness Ready
-
-- [ ] Fake Agent chạy end-to-end qua Runtime, Context, Model Gateway và Validator.
-- [ ] Skill/tool permissions được kiểm tra.
-- [ ] Memory và trace tuân thủ 7-day expiry.
-- [ ] Không có direct provider call ngoài gateway/registry.
-- [ ] Nhóm duyệt Agent contracts trước Phase 4.
+- FE có thể dùng mock server và BE có thể dùng fake provider để làm song song, nhưng checkpoint bắt buộc chạy với FE + API + database thật.
+- Agent Harness, Orchestrator, scheduler, audit và retention chỉ được xây vừa đủ trong feature đầu tiên cần dùng; không tách thành phase backend riêng.
+- Mỗi API mới phải có màn hình hoặc consumer cụ thể trong cùng phase. Mỗi màn hình mới phải có API/business logic thật trước khi đóng phase.
+- Mỗi phase bao gồm migration, authorization/ownership, error handling, telemetry, automated tests, smoke test và rollback liên quan.
+- Chỉ có ba Agent: Planner, Critic/Evaluator, Booking & Logistics. Vision, search, weather và TTS là skill/tool.
+- Không lưu chain-of-thought thô. Chỉ lưu kết quả có cấu trúc, lý do tóm tắt, nguồn, tool/result cần thiết và version.
+- Dữ liệu biến động có source, checked-at và confidence. GPS/media/memory/log chi tiết có `expires_at` tối đa 7 ngày.
+- Một phase chỉ “Done” khi đạt Project-wide Definition of Done trong [plan-requirement.md](plan-requirement.md).
 
 ---
 
-## Phase 4 - AI Orchestration and Three Agents
+## Phase 3 - Tiếp nhận và xác nhận yêu cầu chuyến đi
 
-### Step 4.1 - Implement Orchestrator State and Handoff
+**Kết quả nghiệp vụ:** Người dùng tạo yêu cầu bằng hội thoại tiếng Việt, bổ sung ngữ cảnh và xác nhận summary đủ dữ liệu bắt buộc.
 
-**Mô tả** Xây dựng state và cơ chế handoff để Orchestrator điều phối đúng ba Agent đã định nghĩa.  
-Mỗi task phải giữ request summary, verified data, plan version và trạng thái lỗi trong suốt workflow.  
-Các request bị gửi lại hoặc retry không được vô tình tạo thêm plan version.
+- **Màn hình:** SCR-04, SCR-05.
+- **Phạm vi:** US01–US08; nền transparency US65–US67.
+- **Phụ thuộc:** Phase 2.
 
-**Acceptance Criteria**
-- [ ] Orchestrator chỉ dispatch Planner, Critic/Evaluator hoặc Booking & Logistics.
-- [ ] Mỗi handoff giữ request summary và plan version.
-- [ ] Duplicate/retried request không tạo plan version ngoài ý muốn.
+### Slice 3.1 - Hội thoại và trích xuất yêu cầu
 
-**Verification** State-machine tests cho planning, rework, booking và failure recovery.
+**FE**
 
-**Dependencies** Phase 3.
-**Files Related** backend/app/ai/orchestrator/, workflow state, tests.
+- [ ] Xây SCR-04 gồm message list, composer, lịch sử phiên, processing/cancel/retry và SSE reconnect.
+- [ ] Hiển thị câu hỏi làm rõ trong hội thoại và cho biết profile nào đang được dùng để cá nhân hóa.
 
-### Step 4.2 - Implement Planner Agent
+**BE**
 
-**Mô tả** Triển khai Planner Agent để tạo mới hoặc điều chỉnh itinerary theo yêu cầu đã xác nhận.  
-Kết quả cần bao gồm lịch theo ngày, di chuyển, nhóm chi phí, hành lý, điểm nổi bật và trade-offs.  
-Khi chỉnh sửa, Planner chỉ được thay đổi đúng phạm vi người dùng yêu cầu và phải ghi rõ reason cùng plan version.
+- [ ] Tạo conversation/message API, ownership policy và SSE event ID để reconnect không nhân đôi message.
+- [ ] Xây phần tối thiểu của Agent Runtime, Model Gateway, Prompt/Skill Registry, validator, timeout/cancel và structured trace cho use case này.
+- [ ] Nối Planner qua Orchestrator port để trích xuất ngày đi, nơi xuất phát, điểm đến, thời lượng, ngân sách, sở thích và người đi cùng; route không gọi model provider trực tiếp.
 
-**Acceptance Criteria**
-- [ ] Planner output đúng schema và tạo tối đa 4 phương án.
-- [ ] Planner chỉ sửa phạm vi người dùng yêu cầu khi thực hiện adjustment.
-- [ ] Mỗi đề xuất có summary reason, nguồn liên quan và plan version.
+**Tích hợp và kiểm thử**
 
-**Verification** Golden-fixture tests cho create, partial edit, missing data và impossible request.
+- [ ] Prompt tiếng Việt tạo structured draft; timeout, malformed output và reconnect đều có trạng thái lỗi có thể retry.
 
-**Dependencies** Step 4.1.
-**Files Related** backend/app/ai/agents/planner/, skills, prompts, tests/evals/.
+### Slice 3.2 - Summary, GPS và media
 
-### Step 4.3 - Implement Mandatory Critic Agent
+**FE**
 
-**Mô tả** Triển khai Critic Agent như bước kiểm tra bắt buộc trước khi một plan được hiển thị.  
-Critic đánh giá ngân sách, giờ mở cửa, thời gian di chuyển và các rủi ro an toàn bằng dữ liệu có cấu trúc.  
-Hard failure phải trả lại Planner để sửa, còn soft warning được giữ lại để người dùng cân nhắc.
+- [ ] Xây SCR-05 để xem/sửa từng trường, hiển thị missing-field/version-conflict và confirm version cuối.
+- [ ] SCR-04 hỗ trợ upload có progress/type-size error và GPS consent với mục đích “nơi xuất phát” hoặc “tâm tìm kiếm”.
 
-**Acceptance Criteria**
-- [ ] Mọi plan mới và thay đổi quan trọng đều đi qua Critic.
-- [ ] Hard failure trả về Planner với issue có cấu trúc.
-- [ ] Soft warning được giữ trong kết quả cho người dùng cân nhắc.
+**BE**
 
-**Verification** Scenario tests cho over-budget, closed venue, impossible travel time, safety risk và pass.
+- [ ] Kết hợp prompt, profile và dữ liệu đã xác nhận; ngày đi, nơi xuất phát, ngân sách là bắt buộc.
+- [ ] Version hóa summary; chỉ status `confirmed` được dùng cho phase sau.
+- [ ] Tạo signed upload/download, safe file validation và location/media ownership.
+- [ ] Thêm in-process scheduler với PostgreSQL coordination lock; Retention Cleanup idempotent cho GPS/media/memory/log phát sinh, tối đa 7 ngày.
 
-**Dependencies** Steps 4.1–4.2.
-**Files Related** backend/app/ai/agents/critic/, evaluation skills, prompts, tests/evals/.
+**Tích hợp và kiểm thử**
 
-### Step 4.4 - Implement Booking and Logistics Agent
+- [ ] Login → chat → clarification → edit → confirm chạy end-to-end sau refresh.
+- [ ] GPS/media sai mục đích phải hỏi lại; time-travel test chứng minh dữ liệu hết hạn bị chặn trước khi xóa.
 
-**Mô tả** Triển khai Booking & Logistics Agent để tìm kiếm, so sánh và hướng dẫn dùng dịch vụ bên thứ ba.  
-Kết quả cần nêu provider, final price, độ phù hợp và điều khoản hủy hoặc thay đổi.  
-Agent chỉ cung cấp redirect hoặc hướng dẫn, không được tự đặt chỗ, giữ tiền hay thanh toán.
+### Checkpoint Phase 3
 
-**Acceptance Criteria**
-- [ ] Output gồm provider, final price, suitability và cancellation/change terms.
-- [ ] Agent chỉ tạo redirect/instruction, không gọi action đặt chỗ hoặc thanh toán.
-- [ ] Passenger data chỉ đi qua tool/provider được cho phép.
-
-**Verification** Contract tests với fake providers và negative tests cho forbidden booking/payment action.
-
-**Dependencies** Steps 3.5 và 4.1.
-**Files Related** backend/app/ai/agents/booking/, provider tools, prompts, tests.
-
-### Step 4.5 - Verify Full Agent Workflow
-
-**Mô tả** Kiểm tra toàn bộ workflow giữa Orchestrator, Planner, Critic và Booking bằng dữ liệu đại diện.  
-Luồng rework giữa Planner và Critic phải có giới hạn, lưu được handoff, tool call, result và version trong trace.  
-Bộ kiểm thử phải chứng minh hệ thống chỉ có đúng ba Agent và không cần provider thật để chạy.
-
-**Acceptance Criteria**
-- [ ] Rework loop có giới hạn và trả lỗi có thể giải thích khi không hội tụ.
-- [ ] Agent handoff, tool calls, result và version xuất hiện trong trace.
-- [ ] Không có Agent hoặc sub-agent thứ tư.
-
-**Verification** Integration suite với fake LLM/tools và snapshot execution graph.
-
-**Dependencies** Steps 4.1–4.4.
-**Files Related** backend/tests/integration/ai/, fixtures, trace assertions.
-
-### Checkpoint - AI Core Ready
-
-- [ ] Ba Agent chạy qua cùng Harness.
-- [ ] Critic gate không thể bị bỏ qua.
-- [ ] Booking/payment action bị chặn.
-- [ ] Workflow integration tests pass không cần provider thật.
+- [ ] SCR-04 và SCR-05 dùng API thật trên staging, không còn phụ thuộc mock.
+- [ ] Confirmed summary là contract đầu vào ổn định cho Phase 4.
+- [ ] Trace không chứa chain-of-thought; consent, ownership và retention tests pass.
 
 ---
 
-## Phase 5 - Trip Request and Destination Discovery
+## Phase 4 - Khám phá và lựa chọn địa điểm
 
-### Step 5.1 - Deliver Conversation Slice
+**Kết quả nghiệp vụ:** Người dùng tìm, hiểu, so sánh và chọn địa điểm bằng danh sách, bản đồ, bán kính hoặc ảnh.
 
-**Mô tả** Xây dựng conversation, lưu trữ message và các REST/SSE endpoint cho trải nghiệm chat cơ bản.  
-SSE cần phát rõ trạng thái start, progress, complete và error, đồng thời hỗ trợ reconnect an toàn.  
-Giao diện chat phải hiển thị loading, retry và error mà không làm mất conversation hiện tại.
+- **Màn hình:** SCR-06, SCR-07.
+- **Phạm vi:** US09–US15; US51 khi có review hợp lệ; US65–US67.
+- **Phụ thuộc:** Phase 3 và PostGIS ở Step 2.3.
 
-**Acceptance Criteria**
-- [ ] User tạo conversation và gửi/nhận message thuộc đúng account.
-- [ ] SSE stream có trạng thái start/progress/complete/error và hỗ trợ reconnect an toàn.
-- [ ] Chat UI hiển thị loading, retry và error.
+### Slice 4.1 - Catalog, ranking và lựa chọn
 
-**Verification** API integration test và browser E2E cho một conversation hoàn chỉnh.
+**FE**
 
-**Dependencies** Phases 2 và 4.
-**Files Related** conversation module, API routes, frontend chat feature, tests.
+- [ ] Xây SCR-06 với search/filter, list/map, loading/empty/error và selection state.
+- [ ] Xây SCR-07 với lý do đề xuất, review hợp lệ, source, checked-at và confidence.
+- [ ] Chọn/bỏ chọn/đổi địa điểm phải cập nhật draft summary hiện tại.
 
-### Step 5.2 - Extract and Complete Trip Requirements
+**BE**
 
-**Mô tả** Dùng Planner skill để trích xuất yêu cầu chuyến đi từ natural language và kết hợp với profile.  
-Hệ thống cần nhận biết ngày đi, nơi xuất phát, điểm đến, thời lượng, ngân sách và preferences còn thiếu hoặc chưa rõ.  
-Planning chỉ bắt đầu sau khi các trường bắt buộc đã đủ và người dùng đã trả lời câu hỏi bổ sung.
+- [ ] Tạo curated destination catalog, seed/import có kiểm duyệt và paginated search/detail API.
+- [ ] Mở rộng Tool Registry/provider ports; ranking dùng confirmed request, profile và chỉ public-approved review.
+- [ ] Trả explanation có cấu trúc và version hóa selection; không trả reasoning thô.
 
-**Acceptance Criteria**
-- [ ] Extract được date/origin/destination/duration/budget/preferences theo schema.
-- [ ] Không bắt đầu planning khi thiếu date, origin hoặc budget.
-- [ ] Câu hỏi bổ sung chỉ hỏi dữ liệu chưa đủ hoặc chưa rõ.
+**Tích hợp và kiểm thử**
 
-**Verification** Eval fixtures tiếng Việt cho complete, missing và ambiguous requests.
+- [ ] Ranking ổn định bằng fixture, không dùng review private/pending và giải thích được các tín hiệu chính.
 
-**Dependencies** Steps 3.4, 4.2 và 5.1.
-**Files Related** requirement skills, trip request module, prompts, evals.
+### Slice 4.2 - Radius và image discovery
 
-### Step 5.3 - Confirm Trip Request Summary
+**FE**
 
-**Mô tả** Hiển thị trip request summary để người dùng kiểm tra, chỉnh sửa và xác nhận trước khi planning.  
-Mỗi thay đổi trên field phải tạo version mới và giữ đầy đủ preferences cùng thông tin người đi cùng.  
-Chỉ summary đã được xác nhận mới được sử dụng làm input cho Planner.
+- [ ] SCR-06 đồng bộ list/map, vị trí nhập tay hoặc GPS đã consent, radius control và fallback khi map/GPS lỗi.
+- [ ] Hỗ trợ chọn/upload ảnh, processing state, similarity reason và nhiều khả năng khi confidence thấp.
 
-**Acceptance Criteria**
-- [ ] Frontend hiển thị đầy đủ required fields, preferences và companions.
-- [ ] User có thể sửa từng field và xem version mới.
-- [ ] Chỉ summary đã xác nhận được dùng làm planning input.
+**BE**
 
-**Verification** E2E test create → clarify → edit → confirm.
+- [ ] Tạo PostGIS radius API với SRID/index thống nhất, distance/radius/page limits.
+- [ ] Thêm vision tool adapter có schema, timeout và fake contract; đối chiếu đặc điểm ảnh với catalog.
 
-**Dependencies** Step 5.2.
-**Files Related** trip request API, summary UI, version persistence, tests.
+**Tích hợp và kiểm thử**
 
-### Step 5.4 - Build Curated Destination Catalog
+- [ ] Search text/radius/image → compare → select → updated summary chạy E2E.
+- [ ] Spatial query dùng index; media/trace mới tiếp tục tuân thủ retention.
 
-**Mô tả** Xây dựng place catalog có quy trình import hoặc seed dữ liệu rõ ràng.  
-Mỗi địa điểm cần lưu source, thời điểm kiểm tra gần nhất, confidence và moderation status.  
-Quy trình nhập phải chạy lặp an toàn, không tạo duplicate và chỉ đưa place hợp lệ vào suggestion.
+### Checkpoint Phase 4
 
-**Acceptance Criteria**
-- [ ] Place có nguồn, last_checked_at, confidence và moderation status.
-- [ ] Chỉ place hợp lệ xuất hiện trong suggestion.
-- [ ] Import lặp lại không tạo duplicate.
-
-**Verification** Import integration test và catalog query test.
-
-**Dependencies** Steps 2.2–2.3.
-**Files Related** destination module, import script, migrations, test fixtures.
-
-### Step 5.5 - Deliver Destination Search and Ranking
-
-**Mô tả** Xây dựng chức năng tìm kiếm và xếp hạng địa điểm theo trip request summary cùng profile.  
-Điểm xếp hạng cần xét thời gian, ngân sách, người tham gia và review đã kiểm chứng, đồng thời giải thích reason cụ thể.  
-Người dùng có thể chọn hoặc bỏ chọn địa điểm và thấy summary được cập nhật tương ứng.
-
-**Acceptance Criteria**
-- [ ] Kết quả có suitability score và reason gắn với tiêu chí cụ thể.
-- [ ] Thông tin biến động có source, checked_at và confidence.
-- [ ] User chọn/bỏ chọn place và summary được cập nhật.
-
-**Verification** Ranking tests và E2E selection flow.
-
-**Dependencies** Steps 5.3–5.4.
-**Files Related** recommendation skill, destination API, frontend discovery list, tests.
-
-### Step 5.6 - Deliver Geospatial Discovery
-
-**Mô tả** Cho phép tìm địa điểm trong một bán kính quanh GPS hoặc vị trí do người dùng nhập.  
-Người dùng phải chọn rõ vị trí đó là origin hay search center, còn truy vấn khoảng cách được thực hiện bằng PostGIS.  
-GPS chỉ được sử dụng khi consent của chuyến đi đang bật.
-
-**Acceptance Criteria**
-- [ ] User chọn rõ GPS là origin hay search center.
-- [ ] Radius query dùng PostGIS và trả distance.
-- [ ] GPS không được dùng khi trip consent đang tắt.
-
-**Verification** PostGIS integration tests và browser permission-denied/allowed tests.
-
-**Dependencies** Steps 2.3 và 5.4.
-**Files Related** location API, geospatial repository, map UI, tests.
-
-### Step 5.7 - Deliver Image-supported Discovery
-
-**Mô tả** Cho phép upload ảnh và dùng vision tool để tìm địa điểm hoặc cảnh quan tương đồng.  
-File phải được validation về loại và kích thước, còn object gốc có expires_at không quá 7 ngày.  
-Kết quả cần mô tả điểm tương đồng, kèm confidence và tránh khẳng định tuyệt đối khi độ tin cậy thấp.
-
-**Acceptance Criteria**
-- [ ] File type/size được validate và object có expires_at tối đa 7 ngày.
-- [ ] Kết quả nêu đặc điểm tương đồng và confidence.
-- [ ] Confidence thấp được hiển thị như nhiều khả năng, không khẳng định tuyệt đối.
-
-**Verification** Provider contract test, unsafe-file test và E2E upload/search.
-
-**Dependencies** Steps 2.3, 3.5 và 5.4.
-**Files Related** media module, vision tool adapter, discovery UI, tests.
-
-### Checkpoint - Discovery Ready
-
-- [ ] US01–US15 có trace tới implementation và test.
-- [ ] Conversation → summary confirmation → destination selection hoạt động end-to-end.
-- [ ] Radius và image discovery có nguồn/confidence.
-- [ ] GPS/media có expires_at 7 ngày.
+- [ ] SCR-06 và SCR-07 hoạt động trên staging với provenance/confidence nhất quán.
+- [ ] Danh sách địa điểm đã chọn sẵn sàng cho Phase 5.
 
 ---
 
-## Phase 6 - Itinerary Planning and Customization
+## Phase 5 - Tạo và so sánh lộ trình khả thi
 
-### Step 6.1 - Generate One to Four Itineraries
+**Kết quả nghiệp vụ:** Người dùng nhận 1–4 lộ trình đã qua Critic bắt buộc, so sánh và chọn một phương án.
 
-**Mô tả** Tạo từ một đến bốn itinerary dựa trên summary đã được người dùng xác nhận.  
-Mỗi phương án phải có lịch theo ngày, chi phí, di chuyển, hành lý, điểm nổi bật, cảnh báo và trade-offs.  
-Tất cả itinerary đều phải qua Critic gate; phương án hard-fail không được hiển thị.
+- **Màn hình:** SCR-08, SCR-09.
+- **Phạm vi:** US16–US22; US65–US67.
+- **Phụ thuộc:** Phase 4.
 
-**Acceptance Criteria**
-- [ ] Số itinerary nằm trong 1–4 và mỗi itinerary có daily schedule đầy đủ.
-- [ ] Cost, transport, packing, highlights, warnings và trade-offs được trả theo schema.
-- [ ] Không hiển thị itinerary hard-fail Critic.
+### Slice 5.1 - Planner → Critic workflow
 
-**Verification** Integration/E2E test planning với 1 và nhiều phương án.
+**FE**
 
-**Dependencies** Phases 4–5.
-**Files Related** itinerary module, planning endpoint, planner/critic integration, tests.
+- [ ] Xây SCR-08 với planning/evaluating/revising/completed/failed, cancel/retry và SSE reconnect.
 
-### Step 6.2 - Build Itinerary Comparison Workspace
+**BE**
 
-**Mô tả** Xây dựng không gian so sánh tối đa bốn itinerary trên desktop và mobile.  
-Người dùng cần thấy rõ thời lượng, chi phí, điểm nổi bật, warning, reason và nguồn của dữ liệu biến động.  
-Trạng thái empty, error hoặc partial không được làm mất trip request đang thao tác.
+- [ ] Hoàn thiện Orchestrator handoff Planner → Critic → Planner; không tạo Agent thứ tư.
+- [ ] Planner tạo 1–4 phương án gồm ngày, điểm, lưu trú, hoạt động, chặng, phương tiện, chi phí và hành lý.
+- [ ] Critic bắt buộc kiểm tra ngân sách, giờ mở cửa, travel time và an toàn; hard failure quay lại Planner, soft warning được giữ.
+- [ ] Lưu run/idempotency state và agent/prompt/tool versions; retry không tạo plan trùng.
 
-**Acceptance Criteria**
-- [ ] UI so sánh được tối đa 4 itinerary trên desktop và mobile.
-- [ ] Source/confidence có thể mở xem tại dữ liệu biến động.
-- [ ] Empty/error/partial-state không làm mất request hiện tại.
+**Tích hợp và kiểm thử**
 
-**Verification** Component tests, responsive browser test và E2E comparison.
+- [ ] Không itinerary nào hiển thị nếu chưa có Critic pass; provider/model failure không để plan nửa vời.
 
-**Dependencies** Step 6.1.
-**Files Related** frontend itinerary feature, API query, shared components, tests.
+### Slice 5.2 - So sánh và lựa chọn
 
-### Step 6.3 - Add Manual Editing and Plan Versioning
+**FE**
 
-**Mô tả** Cho phép chỉnh sửa thủ công place, lodging, activity, movement và các item trong itinerary.  
-Mỗi thay đổi phải tạo version có kiểm soát, đồng thời tính lại dữ liệu liên quan về chi phí, thời gian và hành lý.  
-Thay đổi quan trọng phải chạy lại Critic trước khi được dùng tiếp.
+- [ ] Xây SCR-09 so sánh tối đa 4 phương án theo lịch ngày, chi phí, thời lượng, transport, luggage và highlights.
+- [ ] Hiển thị lý do xếp hạng, warning/trade-off và component source/checked-at/confidence dùng chung; hỗ trợ mobile/keyboard.
 
-**Acceptance Criteria**
-- [ ] Manual edit không overwrite version ngoài ý muốn.
-- [ ] Related cost/time/packing data được tính lại.
-- [ ] Important change bắt buộc chạy Critic lại.
+**BE**
 
-**Verification** API concurrency/version tests và E2E manual edit.
+- [ ] Tạo comparison/selection API với ownership, immutable version và optimistic concurrency.
+- [ ] Chuẩn hóa money/timezone/provenance; không trình bày dữ liệu đã hết hạn như dữ liệu hiện tại.
 
-**Dependencies** Steps 2.2 và 6.1.
-**Files Related** itinerary commands, version repository, editor UI, tests.
+**Tích hợp và kiểm thử**
 
-### Step 6.4 - Create Agent Change Proposal
+- [ ] Generate → Critic → compare → select chạy E2E bằng backend thật.
 
-**Mô tả** Cho phép Agent tạo change proposal nhưng chưa áp dụng trực tiếp vào plan.  
-Proposal cần ghi base plan version, diff, các phần bị ảnh hưởng, reason và warning, đồng thời giữ nguyên phần ngoài phạm vi yêu cầu.  
-Proposal phải hết hiệu lực nếu base version đã thay đổi.
+### Checkpoint Phase 5 - Planning MVP
 
-**Acceptance Criteria**
-- [ ] Proposal tham chiếu base plan version.
-- [ ] Phần ngoài phạm vi yêu cầu không bị thay đổi.
-- [ ] Proposal hết hiệu lực nếu base version đã thay đổi.
-
-**Verification** Unit/integration tests cho scoped diff và stale proposal.
-
-**Dependencies** Steps 4.2 và 6.3.
-**Files Related** proposal model, Planner adjustment flow, diff builder, tests.
-
-### Step 6.5 - Accept or Reject Agent Proposal
-
-**Mô tả** Hiển thị proposal để người dùng chủ động chấp nhận hoặc từ chối trước khi cập nhật plan.  
-Accept tạo version mới sau các bước validation và Critic cần thiết, còn reject giữ nguyên plan và ghi decision event.  
-Không endpoint nội bộ nào được bỏ qua bước xác nhận đối với finalized plan.
-
-**Acceptance Criteria**
-- [ ] Accept tạo version mới sau validation/Critic cần thiết.
-- [ ] Reject giữ nguyên plan và ghi decision event.
-- [ ] Không có endpoint nội bộ nào bypass confirmation cho finalized plan.
-
-**Verification** E2E accept/reject và authorization test cho bypass attempt.
-
-**Dependencies** Step 6.4.
-**Files Related** proposal API, confirmation UI, audit event, tests.
-
-### Step 6.6 - Finalize and Reopen Plan
-
-**Mô tả** Cho phép người dùng finalize plan để sử dụng trong chuyến đi và mở lại khi cần thay đổi.  
-Finalized plan phải tham chiếu một version bất biến, còn replan tạo proposal mới thay vì sửa lịch sử.  
-Ứng dụng mobile phải tải được plan đã lưu mà không cần generate lại.
-
-**Acceptance Criteria**
-- [ ] Finalized plan có immutable version reference.
-- [ ] Replan tạo proposal mới, không sửa lịch sử.
-- [ ] Mobile view tải plan đã lưu mà không cần generate lại.
-
-**Verification** E2E finalize → reload → propose change.
-
-**Dependencies** Steps 6.1–6.5.
-**Files Related** plan lifecycle, mobile itinerary view, tests.
-
-### Checkpoint - Planning Ready
-
-- [ ] US16–US28 có trace tới implementation và test.
-- [ ] Planner/Critic loop chạy bắt buộc.
-- [ ] Manual edit và Agent proposal có versioning.
-- [ ] Accept/reject hoạt động và reject không đổi plan.
+- [ ] SCR-08 và SCR-09 deploy được và chỉ hiển thị phương án khả thi.
+- [ ] Selected itinerary là đầu vào ổn định của Phase 6.
 
 ---
 
-## Phase 7 - Booking and Logistics
+## Phase 6 - Tùy chỉnh, phê duyệt và lưu kế hoạch cuối
 
-### Step 7.1 - Define Booking Provider Contract
+**Kết quả nghiệp vụ:** Người dùng chỉnh tay hoặc yêu cầu Agent sửa đúng phạm vi, xem diff và chủ động chấp nhận/từ chối trước khi finalize.
 
-**Mô tả** Định nghĩa contract chung cho kết quả tìm kiếm từ các booking provider.  
-Contract phải hỗ trợ tối thiểu hotel, flight và ground transport, bao gồm giá, điều khoản hủy hoặc đổi và redirect.  
-Không đưa command thanh toán hay giữ chỗ tự động vào contract; provider chưa sẵn sàng dùng fake hoặc sandbox adapter.
+- **Màn hình:** SCR-10, SCR-11.
+- **Phạm vi:** US23–US28; US65–US67.
+- **Phụ thuộc:** Phase 5.
 
-**Acceptance Criteria**
-- [ ] Contract hỗ trợ hotel, flight và ground transport tối thiểu.
-- [ ] Có fake/sandbox adapter cho test.
-- [ ] Contract không có command thanh toán hoặc giữ chỗ tự động.
+### Slice 6.1 - Manual edit và tính lại
 
-**Verification** Provider contract tests và forbidden-operation review.
+**FE**
 
-**Dependencies** Steps 3.5 và 4.4.
-**Files Related** provider ports, booking models, fake adapter, tests.
+- [ ] Xây editor SCR-10 cho add/update/delete/reorder điểm, lưu trú, chặng, hoạt động, vật dụng; có validation, draft undo và conflict UI.
 
-### Step 7.2 - Deliver Search and Comparison Slice
+**BE**
 
-**Mô tả** Tìm các dịch vụ phù hợp với itinerary và so sánh kết quả từ nhiều provider.  
-Kết quả phải gắn với plan version và passenger constraints hiện tại, đồng thời hiển thị provider cùng checked_at.  
-Lỗi từ một provider không được làm mất các kết quả hợp lệ từ provider khác.
+- [ ] Tạo edit commands, immutable versions và optimistic lock.
+- [ ] Tính lại lịch, chi phí, transport, lodging, luggage/activity; thay đổi quan trọng bắt buộc qua Critic.
 
-**Acceptance Criteria**
-- [ ] Search gắn với plan version và passenger constraints hiện tại.
-- [ ] Result hiển thị checked_at và provider.
-- [ ] Provider failure không làm mất các result hợp lệ khác.
+**Tích hợp và kiểm thử**
 
-**Verification** Integration test nhiều fake provider và partial failure.
+- [ ] Concurrent edits không ghi đè im lặng; dữ liệu phụ thuộc luôn nhất quán.
 
-**Dependencies** Step 7.1.
-**Files Related** booking module, Booking Agent flow, comparison API, tests.
+### Slice 6.2 - Agent proposal và user approval
 
-### Step 7.3 - Prepare Passenger Information Safely
+**FE**
 
-**Mô tả** Thu thập tối thiểu thông tin hành khách cần thiết cho dịch vụ mà người dùng đã chọn.  
-Dữ liệu nhạy cảm không được xuất hiện trong log hoặc trace và chỉ được gửi tới provider sau khi người dùng xác nhận.  
-Không chia sẻ dữ liệu với bất kỳ provider nào chưa được lựa chọn.
+- [ ] SCR-10 nhận yêu cầu sửa bằng chat, hiển thị scope/diff/reason/warning và accept/reject.
 
-**Acceptance Criteria**
-- [ ] Field nhạy cảm không xuất hiện trong log/trace.
-- [ ] User xem và xác nhận dữ liệu trước redirect.
-- [ ] Data không được gửi cho provider chưa chọn.
+**BE**
 
-**Verification** Security tests, log inspection và E2E confirmation.
+- [ ] Planner chỉ tạo proposal chưa áp dụng và đúng phạm vi; thay đổi quan trọng qua Critic.
+- [ ] Accept/reject idempotent: accept tạo version mới nguyên tử, reject giữ current version và ghi audit.
 
-**Dependencies** Steps 2.4 và 7.2.
-**Files Related** passenger form/API, redaction rules, booking UI, tests.
+**Tích hợp và kiểm thử**
 
-### Step 7.4 - Implement Partner Redirect
+- [ ] Proposal không đổi plan trước accept; double submit không tạo hai version; Agent không sửa ngoài scope.
 
-**Mô tả** Hiển thị final price và terms trước khi chuyển người dùng sang trang của partner.  
-Redirect chỉ được trỏ tới HTTPS destination trong allow-list và giao diện phải nói rõ giao dịch diễn ra ngoài hệ thống.  
-Sự kiện redirect được audit nhưng không được chứa payment data.
+### Slice 6.3 - Finalize và mobile plan
 
-**Acceptance Criteria**
-- [ ] Redirect chỉ dùng allow-listed HTTPS destination.
-- [ ] UI nói rõ giao dịch nằm ngoài Tour Guide Agent.
-- [ ] Redirect event được audit nhưng không chứa payment data.
+**FE**
 
-**Verification** E2E redirect và open-redirect security test.
+- [ ] Xây SCR-11 dạng mobile-first; reopen plan đã chốt phải tạo draft mới.
 
-**Dependencies** Steps 7.2–7.3.
-**Files Related** redirect endpoint, booking UI, allow-list config, tests.
+**BE**
 
-### Step 7.5 - Verify Booking Guardrails
+- [ ] Tạo lifecycle draft/selected/finalized/active; finalized version là baseline cho booking, active trip và summary.
 
-**Mô tả** Kiểm tra xuyên suốt các guardrail để Agent và API không thể tự thực hiện giao dịch.  
-Adversarial prompt không được tạo forbidden tool call và provider adapter không được expose action bị cấm.  
-Khi chặn hành động, audit reason phải đủ rõ để nhóm vận hành hiểu nguyên nhân.
+**Tích hợp và kiểm thử**
 
-**Acceptance Criteria**
-- [ ] Adversarial prompts không tạo forbidden tool call.
-- [ ] Provider adapter không expose forbidden action.
-- [ ] Audit reason giải thích rõ hành động bị chặn.
+- [ ] Edit/propose → Critic → accept/reject → finalize → mobile view chạy E2E.
 
-**Verification** Red-team tests trên Agent, Tool Registry và API.
+### Checkpoint Phase 6
 
-**Dependencies** Steps 7.1–7.4.
-**Files Related** guardrail tests, booking integration tests, eval fixtures.
-
-### Checkpoint - Booking Ready
-
-- [ ] US29–US34 có trace tới implementation và test.
-- [ ] Search/compare/redirect hoạt động với sandbox provider.
-- [ ] Passenger data được redacted.
-- [ ] Không có đường tự động giao dịch.
+- [ ] SCR-10, SCR-11 deploy được; version history đủ khôi phục trạng thái.
+- [ ] Phase sau không ghi đè finalized version.
 
 ---
 
-## Phase 8 - In-trip Experience and Realtime Monitoring
+## Phase 7 - Tìm dịch vụ và hướng dẫn đặt chỗ
 
-### Step 8.1 - Implement Trip Activation and GPS Consent
+**Kết quả nghiệp vụ:** Người dùng so sánh dịch vụ và tự chuyển sang đối tác; hệ thống không thực hiện giao dịch.
 
-**Mô tả** Quản lý vòng đời chuyến đi qua các trạng thái upcoming, active và ended.  
-GPS mặc định tắt, chỉ bắt đầu thu thập sau explicit consent và phải dừng ngay khi người dùng thu hồi quyền.  
-Mọi GPS event cần có expires_at không quá 7 ngày và chỉ được dùng trong đúng chuyến đi.
+- **Màn hình:** SCR-12, SCR-13.
+- **Phạm vi:** US29–US34.
+- **Phụ thuộc:** Phase 6.
 
-**Acceptance Criteria**
-- [ ] GPS mặc định tắt và chỉ thu thập sau explicit consent.
-- [ ] User tắt GPS thì ingestion dừng và downstream không dùng dữ liệu mới.
-- [ ] GPS event hết hạn tối đa sau 7 ngày.
+### Slice 7.1 - Search và comparison
 
-**Verification** E2E consent on/off và retention metadata test.
+**FE**
 
-**Dependencies** Steps 2.3, 2.4 và 6.6.
-**Files Related** trip lifecycle, location ingestion, companion UI, tests.
+- [ ] Xây SCR-12 với filter/compare theo giá cuối, độ phù hợp, provider, điều kiện hủy/đổi; có stale/unavailable states.
 
-### Step 8.2 - Deliver Destination Q&A
+**BE**
 
-**Mô tả** Cung cấp chức năng hỏi đáp về lịch sử, văn hóa, giá vé, giờ mở cửa và điều kiện tham quan.  
-Hệ thống phải phân biệt stable fact với volatile fact; dữ liệu biến động luôn đi kèm source, checked_at và confidence.  
-Nếu bằng chứng chưa đủ, câu trả lời cần nói rõ giới hạn thay vì tự suy đoán.
+- [ ] Mở rộng Harness/Orchestrator cho Booking & Logistics Agent; provider ports có allow-list, timeout, rate limit và bounded retry.
+- [ ] Chuẩn hóa offer/currency/source/checked-at/expiry/conditions; offer không phải booking confirmation.
 
-**Acceptance Criteria**
-- [ ] Stable facts và volatile facts được phân biệt.
-- [ ] Volatile facts luôn có source, checked_at và confidence.
-- [ ] Câu trả lời không đủ bằng chứng nói rõ giới hạn thay vì suy đoán.
+**Tích hợp và kiểm thử**
 
-**Verification** Grounded-answer eval và missing-source negative test.
+- [ ] Finalized itinerary → search → compare chạy với sandbox/fake contract; offer hết hạn buộc refresh.
 
-**Dependencies** Steps 3.5, 5.4 và 8.1.
-**Files Related** guide skills, travel data tools, companion API/UI, evals.
+### Slice 7.2 - Passenger data và safe redirect
 
-### Step 8.3 - Add Place Identification
+**FE**
 
-**Mô tả** Nhận diện địa điểm từ ảnh hoặc text trong trải nghiệm đồng hành cùng chuyến đi.  
-Khi confidence thấp, hệ thống cần đưa ra nhiều khả năng và hỏi thêm thay vì khẳng định một kết quả duy nhất.  
-Media gốc được bảo vệ bằng thời hạn lưu trữ tối đa 7 ngày.
+- [ ] Xây SCR-13 với minimum passenger data, review screen, final price/conditions và external-transaction notice.
 
-**Acceptance Criteria**
-- [ ] Confidence thấp trả nhiều khả năng và clarification prompt.
-- [ ] Không khẳng định duy nhất khi chưa qua threshold.
-- [ ] Media gốc có expires_at tối đa 7 ngày.
+**BE**
 
-**Verification** Vision contract tests và E2E high/low-confidence cases.
+- [ ] Validate/redact passenger data; redirect/deep link chỉ đến allow-listed domain và luôn ghi audit.
+- [ ] Guardrail cấm Agent/API tự đặt chỗ, giữ tiền, lưu payment credential hoặc xác nhận thanh toán.
 
-**Dependencies** Steps 3.5, 5.7 và 8.2.
-**Files Related** vision tool, identification skill, companion UI, tests.
+**Tích hợp và kiểm thử**
 
-### Step 8.4 - Add Proximity Narration and TTS
+- [ ] Redirect chỉ sau explicit user action; test fake domain, parameter injection và cross-account access.
 
-**Mô tả** Gợi ý nội dung thuyết minh khi người dùng đến gần một điểm trong itinerary.  
-Logic proximity chỉ hoạt động khi GPS consent đang bật và notification không được tự phát audio.  
-TTS chỉ nhận nội dung đã qua output validation và chỉ phát sau thao tác xác nhận của người dùng.
+### Checkpoint Phase 7
 
-**Acceptance Criteria**
-- [ ] Proximity logic chỉ chạy khi GPS consent bật.
-- [ ] Notification không tự phát audio.
-- [ ] TTS chỉ nhận nội dung đã qua output validation.
-
-**Verification** Unit test geofence và browser E2E notification/confirm/play.
-
-**Dependencies** Steps 8.1–8.3.
-**Files Related** proximity service, TTS tool, notification/audio UI, tests.
-
-### Step 8.5 - Implement Background Scheduler
-
-**Mô tả** Xây dựng scheduler cho các recurring job ngay trong modular monolith.  
-PostgreSQL coordination lock và idempotency giúp nhiều worker không chạy trùng cùng một lượt job.  
-Mỗi job cần run ID, timeout, retry có giới hạn và trạng thái đủ rõ để theo dõi khi restart.
-
-**Acceptance Criteria**
-- [ ] Nhiều worker chỉ có một scheduler thực thi mỗi lượt job.
-- [ ] Job có run ID, timeout, retry giới hạn và observable status.
-- [ ] Restart không tạo duplicate side effect.
-
-**Verification** Multi-worker integration test và crash/restart test.
-
-**Dependencies** Steps 1.4 và 2.1.
-**Files Related** backend/app/jobs/runtime/, job tables/locks, tests.
-
-### Step 8.6 - Implement Weather Monitor Job
-
-**Mô tả** Tạo Weather Monitor job để định kỳ kiểm tra active trip theo cadence cấu hình.  
-Job theo dõi weather, travel time và opening hours, đồng thời tránh tạo alert trùng khi dữ liệu không đổi.  
-Thay đổi đáng kể phải tạo cảnh báo có source, confidence và có thể yêu cầu Planner đề xuất phương án khác.
-
-**Acceptance Criteria**
-- [ ] Chỉ active trip được quét theo cadence cấu hình.
-- [ ] Unchanged data không tạo duplicate alert.
-- [ ] Significant change tạo alert có source/confidence và có thể yêu cầu Planner đề xuất thay thế.
-
-**Verification** Time-controlled integration tests cho unchanged, warning và critical cases.
-
-**Dependencies** Steps 3.5, 4.2 và 8.5.
-**Files Related** backend/app/jobs/weather_monitor.py, provider tools, alerts, tests.
-
-### Step 8.7 - Deliver Alert and Approved Replanning
-
-**Mô tả** Hiển thị cảnh báo cùng phương án thay thế khi một địa điểm đóng cửa hoặc không còn an toàn.  
-Phương án mới luôn xuất hiện dưới dạng proposal và không tự động sửa finalized plan.  
-Việc accept hoặc reject phải dùng lại quy tắc version và confirmation đã thiết lập ở Phase 6.
-
-**Acceptance Criteria**
-- [ ] Closed/unsafe destination được đánh dấu rõ.
-- [ ] Alternative xuất hiện dưới dạng proposal, không auto-apply.
-- [ ] Accept/reject dùng cùng version/confirmation rules Phase 6.
-
-**Verification** E2E weather event → proposal → accept/reject.
-
-**Dependencies** Steps 6.4–6.5 và 8.6.
-**Files Related** alert API/UI, planning proposal integration, tests.
-
-### Checkpoint - In-trip Ready
-
-- [ ] US35–US45 có trace tới implementation và test.
-- [ ] GPS opt-in/off được kiểm chứng.
-- [ ] Weather job không chạy trùng.
-- [ ] Alert/replan không bypass user confirmation.
-- [ ] Audio không tự phát.
+- [ ] SCR-12 → SCR-13 → safe redirect chạy E2E.
+- [ ] UI, API và trace đều thể hiện rõ ranh giới với đối tác.
 
 ---
 
-## Phase 9 - Reviews and Moderation
+## Phase 8 - Trip Companion và thuyết minh tại điểm đến
 
-### Step 9.1 - Deliver Private Review Slice
+**Kết quả nghiệp vụ:** Người dùng kích hoạt chuyến đi, kiểm soát GPS, hỏi/nhận diện địa điểm và nghe audio khi chủ động yêu cầu.
 
-**Mô tả** Cho phép người dùng rating và comment cho place hoặc experience sau chuyến đi.  
-Mọi review mới đều ở trạng thái private và chỉ owner có quyền xem hoặc chỉnh sửa.  
-Người dùng khác tuyệt đối không được truy cập private review.
+- **Màn hình:** SCR-14, SCR-15, SCR-16.
+- **Phạm vi:** US35–US41.
+- **Phụ thuộc:** Phase 6; retention scheduler từ Phase 3.
 
-**Acceptance Criteria**
-- [ ] Review mới luôn private.
-- [ ] Owner có thể edit và xem review của mình.
-- [ ] Người khác không đọc private review.
+### Slice 8.1 - Trip lifecycle và GPS consent
 
-**Verification** API authorization tests và E2E create/edit private review.
+**FE**
 
-**Dependencies** Steps 2.4–2.5 và 5.4.
-**Files Related** review module, API, frontend review form, tests.
+- [ ] Xây SCR-14 với activate/end trip, GPS toggle/status/last-send và thông tin sử dụng/xóa dữ liệu.
 
-### Step 9.2 - Add Publication and Moderation
+**BE**
 
-**Mô tả** Cho phép người dùng yêu cầu công khai review và đưa nội dung qua quy trình moderation.  
-Quy trình kiểm tra content, spam, relevance và tính hợp lệ của chuyến đi trước khi hiển thị công khai.  
-Review bị từ chối vẫn private, có reason phù hợp và người dùng có thể chuyển review công khai về private.
+- [ ] Tạo trip lifecycle và location ingestion; kiểm tra consent trên mọi request, GPS hết hạn tối đa 7 ngày.
 
-**Acceptance Criteria**
-- [ ] Public request đi qua moderation state machine.
-- [ ] Rejected content không public và có reason phù hợp.
-- [ ] User có thể chuyển public review về private.
+**Tích hợp và kiểm thử**
 
-**Verification** Moderation scenario tests và E2E publish/unpublish.
+- [ ] Toggle off dừng FE upload và BE từ chối event mới; ownership tests bao phủ nhiều account/trip.
 
-**Dependencies** Step 9.1.
-**Files Related** moderation service, review states, UI, tests.
+### Slice 8.2 - Q&A và place identification
 
-### Step 9.3 - Implement Review Reporting
+**FE**
 
-**Mô tả** Cho phép người dùng report một public review và để operator xử lý theo đúng role.  
-Hệ thống không tạo duplicate report đang mở và mọi state transition đều phải được audit.  
-API cần hỗ trợ đầy đủ luồng tạo, giải quyết hoặc từ chối report với authorization rõ ràng.
+- [ ] Xây SCR-15 cho text/image question, activity suggestions, source panel và low-confidence choices.
 
-**Acceptance Criteria**
-- [ ] User report với reason và không tạo duplicate report mở.
-- [ ] Operator xử lý theo authorization.
-- [ ] Tất cả state transition được audit.
+**BE**
 
-**Verification** API integration tests cho create/resolve/reject report và role checks.
+- [ ] Thêm skills/tools cho lịch sử, văn hóa, giá vé, opening hours, điều kiện tham quan và vision identification.
+- [ ] Output validator bắt buộc provenance cho dữ liệu biến động; thiếu nguồn phải nêu giới hạn.
 
-**Dependencies** Steps 2.4 và 9.2.
-**Files Related** report model/API, operator UI, audit hooks, tests.
+**Tích hợp và kiểm thử**
 
-### Step 9.4 - Feed Valid Reviews into Ranking
+- [ ] Q&A trong/ngoài itinerary và identification có success/low-confidence/failure E2E.
 
-**Mô tả** Chỉ sử dụng public review hợp lệ làm tín hiệu cho hệ thống ranking.  
-Review private, pending, rejected hoặc bị ẩn do report không được ảnh hưởng tới kết quả xếp hạng.  
-Mỗi ranking signal phải truy ngược được về review nguồn và cập nhật nhất quán khi moderation thay đổi.
+### Slice 8.3 - Proximity và user-controlled audio
 
-**Acceptance Criteria**
-- [ ] Private, pending, rejected hoặc reported-hidden review không ảnh hưởng ranking.
-- [ ] Ranking signal có thể truy về nguồn review.
-- [ ] Thay đổi moderation cập nhật signal nhất quán.
+**FE**
 
-**Verification** Ranking integration tests cho từng review state.
+- [ ] Xây SCR-16 với proximity prompt, play/pause và transcript; tuyệt đối không autoplay.
 
-**Dependencies** Steps 5.5 và 9.2–9.3.
-**Files Related** ranking query, review projections, tests.
+**BE**
 
-### Checkpoint - Reviews Ready
+- [ ] PostGIS proximity + dedup; narration/TTS adapter, signed audio URL và retention.
 
-- [ ] US46–US51 có trace tới implementation và test.
-- [ ] Private-by-default được kiểm chứng.
-- [ ] Moderation/report/ranking state nhất quán.
+**Tích hợp và kiểm thử**
+
+- [ ] Tắt GPS dừng proximity; radius/dedup tests ngăn spam; không consent vẫn dùng được chức năng không phụ thuộc vị trí.
+
+### Checkpoint Phase 8
+
+- [ ] SCR-14 → SCR-15/SCR-16 chạy E2E trên staging.
+- [ ] GPS/media/audio đúng consent, ownership và retention.
 
 ---
 
-## Phase 10 - Trip Summary and Personalization
+## Phase 9 - Theo dõi thời gian thực và replanning có phê duyệt
 
-### Step 10.1 - Implement Trip Completion Job
+**Kết quả nghiệp vụ:** Active trip được kiểm tra định kỳ; sự cố tạo cảnh báo/phương án thay thế nhưng không tự sửa finalized plan.
 
-**Mô tả** Tạo Trip Completion job để phát hiện chuyến đi đã kết thúc hoặc được kết thúc sớm.  
-Mỗi trip chỉ có một summary draft đang hoạt động và job phải idempotent khi retry hoặc chạy trên nhiều worker.  
-Khi draft sẵn sàng, hệ thống gửi notification để người dùng tiếp tục hoàn thiện.
+- **Màn hình:** SCR-17.
+- **Phạm vi:** US42–US45; tái sử dụng US25–US27.
+- **Phụ thuộc:** Phases 6 và 8.
 
-**Acceptance Criteria**
-- [ ] Mỗi trip completion chỉ có một draft active.
-- [ ] Job idempotent khi retry hoặc nhiều worker.
-- [ ] User nhận notification khi draft sẵn sàng.
+### Slice 9.1 - Monitoring và alert
 
-**Verification** Time-controlled, duplicate-run và early-end integration tests.
+**FE**
 
-**Dependencies** Steps 8.1 và 8.5.
-**Files Related** backend/app/jobs/trip_completion.py, summary model, notification, tests.
+- [ ] Xây SCR-17 với alert inbox/timeline, severity, unavailable place và source/checked-at/confidence.
 
-### Step 10.2 - Classify Actual Trip Activity
+**BE**
 
-**Mô tả** Đối chiếu finalized plan với confirmation, interaction và GPS nếu người dùng đã bật consent.  
-Summary draft phân loại hoạt động thành visited, skipped hoặc unplanned và lưu evidence tương ứng.  
-Người dùng có thể sửa classification trước khi xác nhận, còn GPS không được dùng nếu consent đang tắt.
+- [ ] Mở rộng scheduler bằng idempotent Weather Monitor và PostgreSQL lock cho multi-worker.
+- [ ] Chỉ quét active trip; kiểm tra weather/travel time/opening hours, material-change threshold, dedup và job metrics.
 
-**Acceptance Criteria**
-- [ ] Draft phân loại visited/skipped/unplanned với evidence.
-- [ ] Không dùng GPS khi consent tắt.
-- [ ] User chỉnh lại classification trước confirm.
+**Tích hợp và kiểm thử**
 
-**Verification** Scenario tests với GPS on/off và E2E correction.
+- [ ] Significant fixture tạo đúng một alert; thay đổi nhỏ không cảnh báo; dashboard phát hiện job trễ/lỗi.
 
-**Dependencies** Steps 8.1 và 10.1.
-**Files Related** summary classifier, trip evidence query, correction UI, tests.
+### Slice 9.2 - Alternative proposal và approval
 
-### Step 10.3 - Add Actual Expense Comparison
+**FE**
 
-**Mô tả** Cho phép nhập actual expense theo category và so sánh với estimate của itinerary.  
-Việc nhập chi phí là tùy chọn; giá trị còn thiếu không được tự động coi là zero.  
-Hệ thống cần tính đúng total, chênh lệch tuyệt đối và tỷ lệ phần trăm theo currency.
+- [ ] SCR-17 hiển thị proposal diff cho điểm, phương tiện, thời gian, chi phí/warning và accept/reject.
 
-**Acceptance Criteria**
-- [ ] Không nhập chi phí vẫn hoàn thành summary.
-- [ ] Hệ thống không suy diễn missing amount bằng zero.
-- [ ] Tính total, absolute difference và percentage đúng với currency.
+**BE**
 
-**Verification** Unit/property tests cho money calculation và E2E skip/input flows.
+- [ ] Job chỉ yêu cầu Planner tạo proposal, Critic kiểm tra và tái sử dụng atomic approval/version flow Phase 6.
 
-**Dependencies** Steps 6.1 và 10.1.
-**Files Related** expense model/service, summary API/UI, tests.
+**Tích hợp và kiểm thử**
 
-### Step 10.4 - Add Diary, Ratings and Media
+- [ ] Provider change → job → alert → proposal → accept/reject chạy E2E; retry không nhân đôi alert/version.
 
-**Mô tả** Cho phép bổ sung overall rating, diary, place review và ảnh vào trip summary.  
-Place review vẫn private theo mặc định, còn media gốc phải hiển thị rõ ngày hết hạn và bị xóa sau tối đa 7 ngày.  
-Structured summary vẫn phải tồn tại bình thường sau khi media gốc hết hạn.
+### Checkpoint Phase 9
 
-**Acceptance Criteria**
-- [ ] Place review vẫn private mặc định.
-- [ ] Media gốc hiển thị rõ ngày hết hạn và bị xóa sau tối đa 7 ngày.
-- [ ] Summary có thể tồn tại sau khi media gốc hết hạn.
-
-**Verification** E2E summary media flow và expiry behavior test.
-
-**Dependencies** Steps 2.3, 9.1 và 10.1.
-**Files Related** summary UI, media metadata, review integration, tests.
-
-### Step 10.5 - Confirm Summary and Update Profile
-
-**Mô tả** Khóa summary sau khi người dùng xác nhận và cập nhật preference vào profile.  
-Chỉ confirmed summary mới được dùng để trích xuất sở thích, financial pace và travel pace, kèm provenance về summary nguồn.  
-Temporary Agent memory không được thay thế cho dữ liệu profile đã xác nhận.
-
-**Acceptance Criteria**
-- [ ] Chỉ confirmed summary cập nhật profile.
-- [ ] Dữ liệu profile có provenance về summary.
-- [ ] Agent memory tạm không được giữ thay cho profile.
-
-**Verification** Integration test draft/no-update và confirm/update.
-
-**Dependencies** Steps 2.5 và 10.2–10.4.
-**Files Related** summary confirmation, profile updater, audit, tests.
-
-### Step 10.6 - Suggest and Start Next Trip
-
-**Mô tả** Tạo từ một đến ba gợi ý cho chuyến đi tiếp theo dựa trên profile và confirmed history.  
-Mỗi suggestion cần có reason; khi được chọn, hệ thống mở conversation mới thay vì sửa trip cũ.  
-Dữ liệu prefill vẫn phải được người dùng kiểm tra và xác nhận như một trip request mới.
-
-**Acceptance Criteria**
-- [ ] Suggestion dựa trên profile/confirmed history và có reason.
-- [ ] Chọn suggestion tạo conversation mới, không sửa trip cũ.
-- [ ] Prefill vẫn yêu cầu user xác nhận summary trip request mới.
-
-**Verification** E2E confirm summary → suggestions → new trip request.
-
-**Dependencies** Steps 5.1–5.3 và 10.5.
-**Files Related** personalization skill, suggestion API/cards, new conversation flow, tests.
-
-### Checkpoint - Summary Ready
-
-- [ ] US52–US64 có trace tới implementation và test.
-- [ ] Completion job idempotent.
-- [ ] Expense optionality đúng.
-- [ ] Confirmed profile update tách khỏi temporary memory.
-- [ ] Media expiry không xóa structured summary.
+- [ ] SCR-17 deploy được; scheduler an toàn trên multi-worker và có telemetry.
+- [ ] Không có code path tự đổi finalized plan khi chưa có user approval.
 
 ---
 
-## Phase 11 - Audit, Retention and Privacy Operations
+## Phase 10 - Review, kiểm duyệt và tín hiệu xếp hạng
 
-### Step 11.1 - Complete Audit Event Model
+**Kết quả nghiệp vụ:** Review mặc định private, chỉ public sau yêu cầu và kiểm duyệt; chỉ review hợp lệ ảnh hưởng ranking.
 
-**Mô tả** Hoàn thiện audit event cho metadata đầu vào, đầu ra, source, tool, result, error và Agent handoff.  
-Event phải có correlation, run, trip và Agent identifier nhưng không chứa PII, secret hoặc raw chain-of-thought.  
-Detailed event cần có expires_at không quá 7 ngày.
+- **Màn hình:** SCR-18, SCR-19, SCR-20.
+- **Phạm vi:** US46–US51; nền dùng lại cho US59–US60.
+- **Phụ thuộc:** Phases 4 và 8.
 
-**Acceptance Criteria**
-- [ ] Event có correlation/run/trip/Agent identifiers.
-- [ ] PII/secret/raw chain-of-thought không xuất hiện.
-- [ ] Detailed event có expires_at tối đa 7 ngày.
+### Slice 10.1 - Review private và publication request
 
-**Verification** Schema tests, redaction tests và representative trace snapshot.
+**FE**
 
-**Dependencies** Steps 3.8 và 4.5.
-**Files Related** audit model, trace serializer, migrations, tests.
+- [ ] Xây SCR-18 với rating/comment, private default và privacy/moderation status.
+- [ ] SCR-19 chỉ hiển thị approved public reviews và report dialog/status.
 
-### Step 11.2 - Enforce Purpose and Ticket ID
+**BE**
 
-**Mô tả** Bảo vệ endpoint xem log chi tiết bằng role, mục đích truy cập và Ticket ID bắt buộc.  
-Mỗi access event phải ghi identity, thời gian, IP, purpose và Ticket ID của người truy cập.  
-Search metadata không được làm lộ nội dung chi tiết trước khi access guard cho phép.
+- [ ] Tạo review state machine với ownership, visit context và immutable moderation history.
+- [ ] Ngăn private/pending review xuất hiện trong public query, ranking, logs không được phép hoặc account khác.
 
-**Acceptance Criteria**
-- [ ] Thiếu một trong hai field thì không mở log.
-- [ ] Access event ghi identity, time, IP, purpose và Ticket ID.
-- [ ] Search metadata không làm lộ detail trước khi access guard pass.
+**Tích hợp và kiểm thử**
 
-**Verification** Authorization/audit tests cho đủ/thiếu/sai role.
+- [ ] Create → private → request public chạy E2E; privacy toggle không bypass moderation.
 
-**Dependencies** Steps 2.4 và 11.1.
-**Files Related** audit API, access guard, operator form, tests.
+### Slice 10.2 - Moderation, reporting và ranking
 
-### Step 11.3 - Build Execution Trace Viewer
+**FE**
 
-**Mô tả** Xây dựng viewer cho operator và engineer theo dõi execution trace của Agent.  
-Viewer hiển thị input/output summary, tool, result, error và handoff, đồng thời hỗ trợ filter theo trip, Agent, mã lỗi và thời gian.  
-Mọi lần mở detail phải qua access guard và không được hiển thị chain-of-thought hay field đã redacted.
+- [ ] Xây SCR-20 cho operator với filters, report/review detail, approve/reject/hide và reason bắt buộc.
 
-**Acceptance Criteria**
-- [ ] Filter theo trip ID, Agent, error code và time range.
-- [ ] Viewer không hiển thị chain-of-thought hoặc redacted fields.
-- [ ] Mở detail luôn đi qua Step 11.2.
+**BE**
 
-**Verification** E2E operator/engineer viewer và negative role test.
+- [ ] Spam/policy/relevance/verified-trip checks trước publish; operator override có role và audit.
+- [ ] Tạo report workflow/rate limit; ranking projection chỉ dùng public + approved + relevant reviews.
 
-**Dependencies** Steps 11.1–11.2.
-**Files Related** audit query API, operations UI, trace visualization, tests.
+**Tích hợp và kiểm thử**
 
-### Step 11.4 - Apply Seven-day Expiry Consistently
+- [ ] Private/pending/rejected/removed review không ảnh hưởng SCR-06; user role không gọi được moderation API.
 
-**Mô tả** Áp dụng chính sách hết hạn 7 ngày cho GPS, media gốc, working memory, trip memory và detailed audit log.  
-Repository phải chặn đọc expired data ngay cả khi dữ liệu chưa được physical deletion.  
-Confirmed structured record không thuộc nhóm dữ liệu tạm và không được loại bởi filter này.
+### Checkpoint Phase 10
 
-**Acceptance Criteria**
-- [ ] Tất cả record/object thuộc scope có expires_at không quá 7 ngày.
-- [ ] Expired data bị chặn đọc ngay cả trước physical deletion.
-- [ ] Confirmed structured records không bị query filter này loại.
-
-**Verification** Time-travel integration tests cho trước/đúng/sau expiry.
-
-**Dependencies** Steps 2.2–2.3, 3.7 và 11.1.
-**Files Related** shared retention policy, repositories, object metadata, tests.
-
-### Step 11.5 - Implement Daily Retention Cleanup Cron
-
-**Mô tả** Tạo cron job hằng ngày để đánh dấu hết hạn, xóa hoặc ẩn danh database data và xóa object.  
-Job phải idempotent, dùng scheduler lock và retry được sau partial failure mà không xóa nhầm confirmed data.  
-Kết quả cleanup được ghi bằng metric và audit summary nhưng không chứa payload đã xóa.
-
-**Acceptance Criteria**
-- [ ] Job idempotent và dùng scheduler lock.
-- [ ] Partial failure có thể retry mà không xóa confirmed structured data.
-- [ ] Kết quả cleanup có metric/audit summary không chứa payload đã xóa.
-
-**Verification** Integration test mixed-age data, partial object-store failure và rerun.
-
-**Dependencies** Steps 8.5 và 11.4.
-**Files Related** backend/app/jobs/retention_cleanup.py, repositories, object store adapter, tests.
-
-### Step 11.6 - Verify Consent and Data Boundaries
-
-**Mô tả** Kiểm tra xuyên hệ thống các boundary về GPS consent, media access, account ownership và quyền xem technical log.  
-Việc thu hồi consent phải chặn ingestion và sử dụng GPS mới; signed media URL cần hết hạn và kiểm tra ownership.  
-Mọi truy cập sai account hoặc sai role phải bị chặn và được audit.
-
-**Acceptance Criteria**
-- [ ] Revoked GPS consent ngăn ingestion/use mới.
-- [ ] Signed media access hết hạn và kiểm tra ownership.
-- [ ] Cross-account/cross-role access bị chặn và audit.
-
-**Verification** Security integration suite và manual privacy review.
-
-**Dependencies** Steps 8.1, 10.4 và 11.2–11.5.
-**Files Related** authorization policies, signed URL service, privacy tests.
-
-### Checkpoint - Audit and Retention Ready
-
-- [ ] US65–US70 có trace tới implementation và test.
-- [ ] Purpose + Ticket ID được enforce.
-- [ ] Dữ liệu tạm hết hạn sau 7 ngày.
-- [ ] Cleanup cron chạy idempotent.
-- [ ] Confirmed business records không bị xóa nhầm.
+- [ ] SCR-18/SCR-19/SCR-20 chạy end-to-end.
+- [ ] Privacy default, moderation và ranking signal có security/integration tests.
 
 ---
 
-## Phase 12 - Quality, Security and Evaluation
+## Phase 11 - Tổng kết chuyến đi và vòng cá nhân hóa
 
-### Step 12.1 - Complete Automated Test Pyramid
+**Kết quả nghiệp vụ:** Người dùng nhận draft tổng kết, chỉnh hành trình/chi phí/kỷ niệm, xác nhận vào lịch sử và bắt đầu chuyến tiếp theo.
 
-**Mô tả** Hoàn thiện test pyramid gồm unit, contract, integration và E2E cho các luồng quan trọng.  
-Mỗi module cần được kiểm tra tại boundary có rủi ro cao, còn integration test dùng PostgreSQL/PostGIS và Object Storage thật trong CI.  
-Các E2E journey quan trọng phải chạy ổn định mà không phụ thuộc vào production provider.
+- **Màn hình:** SCR-21, SCR-22, SCR-23.
+- **Phạm vi:** US52–US64.
+- **Phụ thuộc:** Phases 8–10.
 
-**Acceptance Criteria**
-- [ ] Mỗi module có test tại boundary rủi ro chính.
-- [ ] Integration test dùng PostgreSQL/PostGIS và Object Storage thật trong CI.
-- [ ] Critical E2E journeys chạy ổn định không phụ thuộc provider production.
+### Slice 11.1 - Completion và actual route
 
-**Verification** make test, make integration-test và make e2e pass nhiều lần liên tiếp.
+**FE**
 
-**Dependencies** Phases 2–11.
-**Files Related** backend/tests/, frontend/tests/, e2e/, CI.
+- [ ] Xây SCR-21 với early-end, notification và nhóm đã đi/bỏ qua/phát sinh có evidence/confidence và correction.
 
-### Step 12.2 - Build LLM Evaluation Suite
+**BE**
 
-**Mô tả** Xây dựng bộ LLM evaluation bằng dữ liệu tiếng Việt cho các khả năng AI chính.  
-Dataset cần bao phủ requirement extraction, recommendation, planning, Critic và grounded answer với cả trường hợp bình thường, mơ hồ, không an toàn và bất khả thi.  
-Mỗi lần đổi prompt hoặc model phải có regression eval và so sánh với baseline đã duyệt.
+- [ ] Thêm idempotent Trip Completion job cho scheduled end/early end; tạo đúng một draft.
+- [ ] Đối chiếu finalized plan với interaction, confirmation và consented GPS; không có GPS vẫn tạo draft từ evidence còn lại.
 
-**Acceptance Criteria**
-- [ ] Eval dataset có normal, ambiguous, unsafe và impossible cases.
-- [ ] Có threshold cho schema validity, grounding, tool correctness và Critic recall.
-- [ ] Prompt/model change chạy regression eval trong CI phù hợp.
+**Tích hợp và kiểm thử**
 
-**Verification** Chạy eval bằng fixed fixtures và lưu báo cáo baseline.
+- [ ] Job retry/multi-worker không tạo draft trùng; user correction được lưu trước confirm.
 
-**Dependencies** Phases 3–8.
-**Files Related** backend/tests/evals/, datasets, evaluator scripts, CI.
+### Slice 11.2 - Expenses, diary, media và place reviews
 
-### Step 12.3 - Perform Threat Modeling and Hardening
+**FE**
 
-**Mô tả** Thực hiện threat modeling cho authentication, prompt injection, tool abuse, SSRF, upload và open redirect.  
-Phạm vi cũng bao gồm PII leakage, provider compromise, egress policy và URL allow-list.  
-Mọi phát hiện high-risk cần mitigation rõ ràng và automated regression test tương ứng.
+- [ ] Xây SCR-22 với optional expense categories, variance, diary, photos, trip rating và place reviews.
 
-**Acceptance Criteria**
-- [ ] Threat model có asset, boundary, attack và mitigation.
-- [ ] High-risk findings có automated regression test.
-- [ ] Tool/provider egress và URL allow-list được enforce.
+**BE**
 
-**Verification** Security test suite và review checklist được ký duyệt.
+- [ ] Lưu amount/currency/category, tính absolute/percentage variance và phân biệt “không nhập” với 0.
+- [ ] Tái sử dụng media retention và review privacy/moderation, không tạo model song song.
 
-**Dependencies** Phases 2–11.
-**Files Related** docs/security/, guardrails, upload/redirect/provider policies, tests.
+**Tích hợp và kiểm thử**
 
-### Step 12.4 - Validate Accessibility and Responsive UX
+- [ ] Có thể hoàn tất summary không nhập chi phí; calculations và private-default reviews đúng.
 
-**Mô tả** Kiểm tra accessibility và responsive UX trên các journey cốt lõi của frontend.  
-Người dùng phải thao tác được bằng keyboard, nhận focus, label, error và streaming status rõ ràng, kể cả với screen reader cơ bản.  
-Chat, itinerary comparison và trip companion cần hoạt động trên các viewport mobile mục tiêu.
+### Slice 11.3 - Confirm summary và next trip
 
-**Acceptance Criteria**
-- [ ] Core journeys dùng được bằng keyboard.
-- [ ] Form/error/streaming update có accessible labels/status.
-- [ ] Chat, comparison và trip companion hoạt động trên viewport mục tiêu.
+**FE**
 
-**Verification** Automated accessibility scan và manual keyboard/mobile review.
+- [ ] Review-before-confirm giải thích dữ liệu dùng cá nhân hóa; SCR-23 hiển thị 1–3 cards và start planning.
 
-**Dependencies** Phases 5–11.
-**Files Related** frontend shared UI/features, E2E accessibility tests.
+**BE**
 
-### Step 12.5 - Test Performance and Capacity
+- [ ] Confirm summary nguyên tử, khóa history và cập nhật preference/spending/travel pace chỉ từ confirmed data.
+- [ ] Sinh 1–3 suggestions; start endpoint tạo conversation/request mới với preference prefill.
 
-**Mô tả** Đo performance của API, SSE, spatial query, Agent run và background job.  
-Thiết lập baseline cùng target cho latency, concurrency và throughput, đồng thời rà query plan để tránh full scan ngoài dự kiến.  
-Rate limit và backpressure phải bảo vệ được model/provider budget khi tải tăng.
+**Tích hợp và kiểm thử**
 
-**Acceptance Criteria**
-- [ ] Có baseline và target cho các operation chính.
-- [ ] Spatial query và history query không full-scan ngoài dự kiến.
-- [ ] Rate limit/backpressure bảo vệ model/provider budget.
+- [ ] Double confirm không tạo/cập nhật trùng; confirm → profile/history → suggestion → new conversation chạy E2E.
 
-**Verification** Load tests và database query-plan review.
+### Checkpoint Phase 11
 
-**Dependencies** Phases 5–11.
-**Files Related** load-tests/, indexes, rate limiting, performance report.
-
-### Step 12.6 - Test Failure and Recovery
-
-**Mô tả** Mô phỏng lỗi timeout hoặc partial failure từ LLM, provider, database và Object Storage.  
-Kiểm tra scheduler restart, retry và recovery để bảo đảm không mất confirmed data hoặc tạo duplicate plan, summary hay alert.  
-Các cơ chế circuit breaker và bounded retry không được gây retry storm.
-
-**Acceptance Criteria**
-- [ ] User nhận error/retry state rõ ràng và không mất confirmed data.
-- [ ] Job retry không tạo duplicate plan/summary/alert.
-- [ ] Circuit/bounded retry không gây retry storm.
-
-**Verification** Fault-injection integration tests và recovery checklist.
-
-**Dependencies** Phases 3–11.
-**Files Related** resilience policies, integration tests, job tests.
-
-### Checkpoint - Quality Gate
-
-- [ ] Full automated suite pass.
-- [ ] LLM eval đạt threshold được duyệt.
-- [ ] Không còn high-risk security finding mở.
-- [ ] Accessibility và performance đạt target.
-- [ ] Failure recovery được kiểm chứng.
+- [ ] SCR-21 → SCR-22 → SCR-23 chạy E2E.
+- [ ] Confirmed summary là dữ liệu bền vững, không phải Agent memory tạm thời.
 
 ---
 
-## Phase 13 - Observability and Deployment
+## Phase 12 - Audit, privacy và hỗ trợ vận hành
 
-### Step 13.1 - Add Production Observability
+**Kết quả nghiệp vụ:** Operator/Engineer được cấp quyền có thể truy vết an toàn; user transparency và retention được kiểm chứng xuyên hệ thống.
 
-**Mô tả** Bổ sung structured log, metric, distributed trace và dashboard cho môi trường production.  
-Correlation ID phải nối được API request với Agent run và job run để hỗ trợ điều tra lỗi end-to-end.  
-Dashboard và alert chỉ dùng metadata cần thiết, không chứa payload nhạy cảm.
+- **Màn hình:** SCR-24, SCR-25.
+- **Phạm vi:** US68–US70; hoàn thiện US65–US67 và shared retention.
+- **Phụ thuộc:** Audit events Phases 3–11 và role foundation Phase 2.
 
-**Acceptance Criteria**
-- [ ] Có metrics cho latency/error/model/tool/job/cleanup.
-- [ ] Correlation ID nối API request với Agent run và job run.
-- [ ] Dashboard/alert không chứa payload nhạy cảm.
+### Slice 12.1 - Audit search và protected detail
 
-**Verification** Gây lỗi thử và theo dấu end-to-end trên local/staging observability.
+**FE**
 
-**Dependencies** Phases 3, 8 và 11.
-**Files Related** observability config, instrumentation, dashboards, alerts.
+- [ ] Xây SCR-24 với filters trip/Agent/error/time, pagination và role-aware states.
+- [ ] SCR-25 bắt buộc form purpose + Ticket ID trước khi tải detail; không prefetch nội dung bảo vệ.
 
-### Step 13.2 - Build Production Images
+**BE**
 
-**Mô tả** Tạo production image tối thiểu cho backend và frontend với dependency được khóa phiên bản.  
-Container phải chạy non-root, có health check và không chứa secret hoặc dev dependency không cần thiết.  
-Quy trình build cần reproducible và đáp ứng vulnerability scan policy.
+- [ ] Chuẩn hóa events từ API, Orchestrator, Agents, tools/providers/jobs; redact secrets, passenger data và PII không cần thiết.
+- [ ] Tạo role-based search/detail API; mọi detail attempt ghi actor, timestamp, IP, purpose và Ticket ID.
 
-**Acceptance Criteria**
-- [ ] Build reproducible và pin dependency lock files.
-- [ ] Image không chứa source secret/dev dependency không cần thiết.
-- [ ] Container chạy non-root và pass vulnerability scan policy.
+**Tích hợp và kiểm thử**
 
-**Verification** Build/run images và container security scan.
+- [ ] Thiếu role/purpose/ticket thì không tải detail; mỗi access/denial có audit.
 
-**Dependencies** Phase 12.
-**Files Related** backend/frontend container files, build scripts, CI.
+### Slice 12.2 - Trace viewer và retention verification
 
-### Step 13.3 - Provision Staging Environment
+**FE**
 
-**Mô tả** Chuẩn bị staging có PostgreSQL/PostGIS, Object Storage, secret, provider sandbox và ingress TLS.  
-Cấu hình staging phải tách khỏi production và migration được chạy như một deployment step có kiểm soát.  
-Sau mỗi lần deploy, nhóm phải chạy được smoke test và integration test cần thiết.
+- [ ] SCR-25 hiển thị redacted input, tool/result, source, handoff, validation, error và versions.
+- [ ] Deep link dữ liệu đã dọn hiển thị “đã hết hạn”, không tạo broken UI.
 
-**Acceptance Criteria**
-- [ ] Environment config tách biệt production.
-- [ ] Migration được chạy như deployment step có kiểm soát.
-- [ ] Smoke test có thể chạy sau deploy.
+**BE**
 
-**Verification** Deploy staging từ clean environment và chạy smoke/integration tests.
+- [ ] Xây trace projection theo correlation/request/run ID, đánh dấu span thiếu/hết hạn và giới hạn query.
+- [ ] Cleanup đầy đủ GPS, media gốc, working/trip memory, detailed logs; mark-expired trước delete/anonymize.
+- [ ] Không xóa profile, finalized plan, approved review hoặc confirmed summary; thêm cleanup metrics/safe retry.
 
-**Dependencies** Steps 13.1–13.2.
-**Files Related** infra deployment manifests, secret config, CI/CD.
+**Tích hợp và kiểm thử**
 
-### Step 13.4 - Establish Backup and Restore
+- [ ] Engineer tái dựng được Planner→Critic/Booking fixture lỗi mà không thấy secret/chain-of-thought.
+- [ ] Time-travel E2E và cleanup/restore drill bao phủ PostgreSQL + Object Storage.
 
-**Mô tả** Thiết lập backup cho PostgreSQL và quy định rõ retention behavior của Object Storage.  
-Backup không được kéo dài thời gian tồn tại của sensitive data đã hết hạn ngoài policy được duyệt.  
-Quy trình restore, recovery objective và hướng dẫn vận hành cần được kiểm chứng bằng restore drill.
+### Checkpoint Phase 12
 
-**Acceptance Criteria**
-- [ ] Backup không kéo dài lifetime của expired sensitive data ngoài policy đã duyệt.
-- [ ] Restore database vào isolated environment thành công.
-- [ ] Recovery objectives và procedure được ghi trong runbook.
-
-**Verification** Thực hiện restore drill và kiểm tra dữ liệu/retention metadata.
-
-**Dependencies** Step 13.3.
-**Files Related** backup config, scripts, runbook, drill report.
-
-### Step 13.5 - Implement Deployment and Rollback
-
-**Mô tả** Tự động hóa việc deploy versioned artifact, chạy migration, smoke test và rollback.  
-Pipeline phải dừng rollout khi migration hoặc smoke test thất bại và luôn sử dụng immutable version hoặc tag.  
-Rollback application không được làm hỏng database schema hoặc dữ liệu đã xác nhận.
-
-**Acceptance Criteria**
-- [ ] Deploy dùng immutable version/tag.
-- [ ] Failure ở migration/smoke test dừng rollout.
-- [ ] Rollback application không làm database schema hỏng.
-
-**Verification** Staging deploy thành công và rollback drill.
-
-**Dependencies** Steps 13.2–13.4.
-**Files Related** CI/CD workflows, deployment manifests, migration/runbook.
-
-### Step 13.6 - Validate Scheduler Operations
-
-**Mô tả** Xác nhận Weather Monitor, Trip Completion và Retention Cleanup chạy đúng trên staging và production.  
-Trong mô hình nhiều instance, mỗi lượt chỉ có một scheduler leader và mọi delay, failure hoặc duplicate attempt đều tạo metric cùng alert.  
-Retention Cleanup phải chạy hằng ngày và báo cáo được số record đã hết hạn hoặc bị xóa.
-
-**Acceptance Criteria**
-- [ ] Chỉ một scheduler leader chạy mỗi lượt.
-- [ ] Job delay/failure/duplicate-attempt tạo metric và alert.
-- [ ] Retention Cleanup chạy hằng ngày và có báo cáo số lượng expired/deleted.
-
-**Verification** Multi-instance staging soak test qua ít nhất một chu kỳ job/cron thử nghiệm.
-
-**Dependencies** Steps 8.5–8.7, 10.1, 11.5 và 13.3.
-**Files Related** scheduler config, dashboards, operational tests.
-
-### Checkpoint - Staging Ready
-
-- [ ] Staging deploy/rollback được kiểm chứng.
-- [ ] Backup restore drill thành công.
-- [ ] Observability nối API–Agent–job.
-- [ ] Scheduler multi-instance không chạy trùng.
-- [ ] Production runbook được duyệt.
+- [ ] SCR-24 → purpose/ticket gate → SCR-25 chạy đúng role.
+- [ ] Source/reason/warning nhất quán ở discovery, planning, proposal và alert.
+- [ ] Retention/consent matrix đầy đủ và cleanup được giám sát.
 
 ---
 
-## Phase 14 - Release Readiness and Launch
+## Phase 13 - Production readiness và phát hành
 
-### Step 14.1 - Prepare Production Seed and Provider Configuration
+**Kết quả nghiệp vụ:** Toàn bộ vertical slices vận hành an toàn trong production, có observability, recovery, rollback và UAT truy vết được.
 
-**Mô tả** Chuẩn bị destination data đã kiểm duyệt và cấu hình production provider trước khi phát hành.  
-Quy trình seed hoặc import phải có provenance, validation và idempotency; provider key cùng scope không được ghi vào log.  
-Production chỉ được dùng data và provider nằm trong danh sách cho phép.
+Phase này không thêm nghiệp vụ mới; quality/telemetry cơ bản đã đi cùng từng phase.
 
-**Acceptance Criteria**
-- [ ] Seed/import có provenance, idempotency và validation.
-- [ ] Provider keys/scopes được kiểm tra mà không ghi vào log.
-- [ ] Production không dùng test data/provider ngoài danh sách cho phép.
+### Slice 13.1 - Packaging và observability
 
-**Verification** Dry-run import và provider connectivity smoke test.
+**FE**
 
-**Dependencies** Steps 5.4, 7.1 và 13.3.
-**Files Related** seed/import data, provider config, release scripts.
+- [ ] Production bundle/image, runtime config, redacted error reporting, web vitals và accessibility/responsive regression.
 
-### Step 14.2 - Complete Requirement Traceability
+**BE**
 
-**Mô tả** Lập traceability matrix nối business requirement và US01–US70 với implementation, endpoint, UI, test và tài liệu.  
-Ba Agent cùng các global policy cần có trace riêng và mọi deferment phải được ghi rõ.  
-Bước này cũng rà soát để loại bỏ mâu thuẫn còn lại giữa các tài liệu nguồn.
+- [ ] Production image, migration job, health/readiness và telemetry cho API/SSE/Agents/providers/scheduler.
+- [ ] SLO/dashboard/alerts cho latency, error, provider/token usage, job lag, cleanup và storage.
 
-**Acceptance Criteria**
-- [ ] Mỗi US/SYS có implementation/test reference hoặc documented deferment.
-- [ ] Ba Agent và các global policies có trace riêng.
-- [ ] Không còn yêu cầu mâu thuẫn giữa bốn tài liệu nguồn.
+**Tích hợp**
 
-**Verification** Manual review ma trận với product và engineering.
+- [ ] Immutable FE/BE artifacts từ cùng commit; deploy staging và smoke auth, chat, discovery, planning, finalized plan, scheduler.
 
-**Dependencies** Phases 2–13.
-**Files Related** docs/traceability/, test references, requirement docs.
+### Slice 13.2 - Security, performance và recovery
 
-### Step 14.3 - Execute User Acceptance Testing
+**FE**
 
-**Mô tả** Thực hiện UAT bằng tiếng Việt với dữ liệu đại diện tại Việt Nam.  
-Phạm vi bao gồm planning, customization, booking redirect, in-trip experience, review và trip summary.  
-Blocking defect phải được sửa, có regression test và nhận stakeholder sign-off trước khi phát hành.
+- [ ] Kiểm tra XSS/upload/redirect, session expiry, sensitive caching và performance chat/map/comparison/Companion.
 
-**Acceptance Criteria**
-- [ ] Planning, customization, booking redirect, in-trip, review và summary journeys pass.
-- [ ] User hiểu warning, source/confidence và accept/reject Agent proposal.
-- [ ] Blocking defects được sửa và regression test trước sign-off.
+**BE**
 
-**Verification** UAT report có evidence và stakeholder sign-off.
+- [ ] Threat model auth/ownership, upload/signed URL, SSRF/provider, redirect, prompt/tool boundaries và rate limits.
+- [ ] Load/failure tests cho API/SSE/PostGIS/scheduler/providers; backup/restore drill PostgreSQL/Object Storage.
 
-**Dependencies** Steps 14.1–14.2.
-**Files Related** UAT scripts, issue tracker, regression tests.
+### Slice 13.3 - Traceability, UAT và rollout
 
-### Step 14.4 - Finalize Documentation and Runbooks
+**FE + BE + Product/Ops**
 
-**Mô tả** Hoàn thiện README, architecture, API docs và các runbook vận hành.  
-Tài liệu cần bao phủ provider operation, incident, backup, scheduler và retention, đồng thời phản ánh đúng code cùng deployment cuối.  
-Một người không tham gia triển khai phải có thể làm theo runbook để thực hiện dry-run thành công.
+- [ ] Map US01–US70 và SCR-01–SCR-25 đến automated/UAT tests.
+- [ ] UAT năm journey: planning; customization/finalize; booking guidance; active-trip response; post-trip summary.
+- [ ] Runbooks cho provider outage, stuck Agent run, missed job, retention failure và rollback-compatible migration.
+- [ ] Canary/feature-flag rollout, theo dõi SLO và diễn tập rollback trước general availability.
 
-**Acceptance Criteria**
-- [ ] Tài liệu phản ánh đúng code/deployment cuối.
-- [ ] On-call có hướng dẫn xử lý provider outage, stuck job và cleanup failure.
-- [ ] Không còn placeholder trong tài liệu release.
+### Final Checkpoint - Production Ready
 
-**Verification** Một người không tham gia triển khai thực hiện dry-run theo runbook.
-
-**Dependencies** Phases 12–13.
-**Files Related** README.md, docs/, OpenAPI, operational runbooks.
-
-### Step 14.5 - Run Production Launch Checklist
-
-**Mô tả** Thực hiện checklist cuối cho security, migration, monitoring, rollback, provider và data policy trước go-live.  
-Mọi checkpoint trước đó phải pass hoặc có waiver được phê duyệt, đồng thời dashboard, alert, backup và incident ownership phải hoạt động.  
-Sau deploy, nhóm chạy smoke test, core synthetic journey và theo dõi production trong khoảng thời gian đã thống nhất.
-
-**Acceptance Criteria**
-- [ ] Tất cả checkpoint trước đã pass hoặc có waiver được phê duyệt.
-- [ ] Dashboard/alerts, backup, rollback và incident ownership hoạt động.
-- [ ] Sau deploy, smoke test và core synthetic journey pass.
-
-**Verification** Signed launch checklist, production smoke test và post-deploy monitoring window.
-
-**Dependencies** Steps 14.1–14.4.
-**Files Related** release checklist, deployment pipeline, monitoring.
-
-### Final Checkpoint - Project Complete
-
-- [ ] Business requirements và US01–US70 có traceability đầy đủ.
-- [ ] Frontend, API Service, AI Orchestrator, ba Agent và Agent Harness hoạt động production.
-- [ ] PostgreSQL/PostGIS và Object Storage được backup/monitor đúng policy.
-- [ ] Weather Monitor, Trip Completion và Retention Cleanup ổn định.
-- [ ] Security, privacy, 7-day retention và audit access được kiểm chứng.
-- [ ] UAT và production launch checklist được phê duyệt.
+- [ ] Tất cả checkpoint Phase 1–12 đạt; không còn blocker severity cao.
+- [ ] Deploy/rollback, migration, backup/restore và scheduler failover đã diễn tập.
+- [ ] UAT, security, accessibility, performance và traceability được phê duyệt.
 
 ---
 
-## 8. Parallelization Strategy
+## Milestones và dependency sequence
 
-Chỉ parallel sau khi contract liên quan đã được chốt:
+| Milestone | Phases | Increment triển khai được | Điều kiện đầu ra |
+| --- | --- | --- | --- |
+| M0 - Platform Ready | 1–2 | Stack, identity, profile, persistence, typed API | Platform dùng chung |
+| M1 - Planning MVP | 3–5 | Confirm request, discovery, itinerary khả thi | Selected itinerary |
+| M2 - Finalized Trip | 6–7 | Customize/finalize và booking guidance | Immutable finalized plan, safe redirect |
+| M3 - Active Trip | 8–9 | Companion, consented GPS, narration, alert/replanning | Active lifecycle, scheduler |
+| M4 - Learning Loop | 10–11 | Trusted reviews, summary, personalization | Confirmed summary cập nhật profile |
+| M5 - Operable Release | 12–13 | Audit/privacy operations và production rollout | UAT/SLO/security/recovery approved |
 
-- Sau Phase 1, frontend shell, database foundation và Agent Harness có thể tiến hành song song với coordination.
-- Sau OpenAPI contract, frontend feature và backend vertical slice tương ứng có thể chia cho hai luồng.
-- Provider adapter có thể làm song song nếu cùng tuân Tool/Provider contract.
-- Reviews (Phase 9) có thể song song với phần cuối In-trip (Phase 8) sau khi auth/audit/media contracts ổn định.
-- LLM eval, security tests và accessibility có thể bắt đầu sớm theo từng feature thay vì chờ Phase 12.
-- Migration, shared schema, Agent contracts, scheduler lock và generated client phải có một owner tại một thời điểm.
+### Dependency không được bỏ qua
 
-## 9. Risks and Mitigations
+- Phase 4 chỉ dùng summary đã confirmed.
+- Phase 5 chỉ hiển thị itinerary sau mandatory Critic check.
+- Phases 6–9 không ghi đè finalized plan; Agent/job chỉ tạo proposal.
+- Phase 7 chỉ hướng dẫn/chuyển hướng, không giao dịch.
+- Phases 8–11 chỉ dùng GPS khi consent của trip đang bật.
+- Phase 10 chỉ đưa public-approved review vào ranking.
+- Phase 11 chỉ cập nhật profile từ confirmed summary.
+- Phase 12 chỉ mở technical detail sau authorization + purpose + Ticket ID.
 
-| Risk | Impact | Mitigation |
+## Chiến lược phát triển song song FE–BE
+
+- Đầu phase: FE lead, BE lead và Product chốt screen states, OpenAPI schema, error codes và E2E scenarios.
+- Trong phase: FE dùng generated client + mock theo contract; BE dùng fake provider + contract tests. Contract drift làm CI fail.
+- Giữa phase: tích hợp thin thread sớm từ UI → API → DB/provider trước khi mở rộng edge cases.
+- Cuối phase: bỏ mock khỏi acceptance path, chạy migration, integration/E2E, accessibility, security smoke và deploy staging.
+- Breaking API/migration phải có version hoặc backward-compatible rollout để FE và BE deploy an toàn.
+
+## Requirement coverage
+
+| Nhóm yêu cầu | Phase chính | Màn hình |
 | --- | --- | --- |
-| Chưa chọn travel/maps/weather/booking/vision/TTS providers | High | Xây provider ports và fake adapters trước; spike từng provider trước vertical slice liên quan |
-| Dữ liệu giá/giờ mở cửa lỗi thời | High | Bắt buộc source, checked_at, confidence và freshness rule |
-| LLM tạo plan không khả thi | High | Mandatory Critic gate, deterministic validators và eval fixtures |
-| Agent tự vượt quyền hoặc gọi tool nguy hiểm | High | Tool allow-list, guardrails, no payment/booking action và adversarial tests |
-| Scheduler chạy trùng trên nhiều worker | High | PostgreSQL coordination lock, idempotency key và unique constraints |
-| Dữ liệu nhạy cảm tồn tại quá 7 ngày | High | expires_at từ lúc ghi, read filtering và daily cleanup with metrics |
-| Cleanup xóa nhầm confirmed records | High | Phân loại temporary/confirmed rõ ràng, transaction, dry-run test và invariant |
-| GPS bị dùng khi chưa đồng ý | High | Consent check tại ingestion, query và tool boundary |
-| Provider outage làm hỏng toàn flow | Medium | Timeout, bounded retry, partial result và user-facing degradation |
-| Token/cost tăng không kiểm soát | Medium | Context budget, model gateway metrics, rate limit và eval |
-| Scope 70 user stories quá lớn | High | Thực hiện theo vertical slice, checkpoint từng Phase và release theo milestone nội bộ |
-| Tài liệu lệch code | Medium | Traceability matrix và cập nhật docs trong Definition of Done |
+| Account/profile/history | 2 | SCR-01–SCR-03 |
+| US01–US08 | 3 | SCR-04–SCR-05 |
+| US09–US15 | 4 | SCR-06–SCR-07 |
+| US16–US22 | 5 | SCR-08–SCR-09 |
+| US23–US28 | 6 | SCR-10–SCR-11 |
+| US29–US34 | 7 | SCR-12–SCR-13 |
+| US35–US41 | 8 | SCR-14–SCR-16 |
+| US42–US45 | 9 | SCR-17 |
+| US46–US51 | 10 | SCR-18–SCR-20 |
+| US52–US64 | 11 | SCR-21–SCR-23 |
+| US65–US67 | 3–11; verify 12 | Shared transparency components |
+| US68–US70 | 12 | SCR-24–SCR-25 |
 
-## 10. Open Decisions Before Relevant Phases
+## Rủi ro chính và kiểm soát
 
-Các quyết định này không chặn Phase 1 nhưng phải được chốt trước Step tương ứng:
+| Rủi ro | Kiểm soát bắt buộc |
+| --- | --- |
+| FE dùng mock quá lâu | Contract-first, generated client, drift CI, E2E API thật ở checkpoint |
+| AI/provider không ổn định | Structured output, validator, bounded retry, golden eval |
+| Dữ liệu biến động lỗi thời | Source + checked-at + confidence + expiry/refresh |
+| Planner bỏ qua feasibility | Mandatory Critic và test không cho bypass |
+| Agent/job tự sửa plan | Proposal-only, atomic approval, immutable versions |
+| Rò GPS/media/log | Consent, ownership, redaction, signed URL, 7-day cleanup |
+| Scheduler chạy trùng | PostgreSQL lock, idempotency, unique constraints |
+| Booking vượt phạm vi | No-payment guardrail, allow-list, redirect security tests |
+| Scope tăng do hạ tầng/Agent | Modular monolith, đúng ba Agent, chỉ thêm khi có số liệu |
 
-- Nhà cung cấp LLM và model policy — trước Step 3.2.
-- Travel catalog source và quy trình kiểm duyệt — trước Step 5.4.
-- Maps/routing/weather providers và freshness thresholds — trước Steps 5.6 và 8.6.
-- Vision và TTS providers — trước Steps 5.7, 8.3 và 8.4.
-- Booking partners/sandbox và passenger fields tối thiểu — trước Phase 7.
-- Notification channel đầu tiên — trước Step 10.1.
-- Cadence của Weather Monitor và Trip Completion — trước Steps 8.6 và 10.1.
-- Production hosting, observability stack và backup service — trước Phase 13.
-- Currency/timezone normalization policy — trước Step 2.2.
+## Quyết định cần chốt trước phase
 
-## 11. Plan Approval
+- Phase 3: LLM provider/model, SSE reconnect policy, media types/limits.
+- Phase 4: curated sources, provenance/confidence rules, map provider/quota.
+- Phase 5: hard feasibility rules, warning taxonomy, eval thresholds.
+- Phase 7: booking sandbox, deep-link contract, minimum passenger data.
+- Phase 8: proximity threshold, notification policy, TTS/audio UX.
+- Phase 9: monitor interval, material-change thresholds, notification channels.
+- Phase 10: community policy, moderation SLA và report outcomes.
+- Phase 11: expense categories, confirmation semantics, personalization consent.
+- Phase 13: hosting, SLO/RTO/RPO, rollout và production data licensing.
 
-Trước khi bắt đầu triển khai:
+Mỗi quyết định phải có owner/deadline. Fake adapter hoặc feature flag giúp giữ tiến độ nhưng không đủ để tuyên bố production-ready.
 
-- [ ] Product owner xác nhận scope và thứ tự Phase.
-- [ ] Technical owner xác nhận repository structure và architecture boundaries.
-- [ ] Security/privacy owner xác nhận retention 7 ngày và log access policy.
-- [ ] Nhóm xác nhận provider decisions cần cho ba Phase đầu.
-- [ ] Phase 1 được tạo thành các issue nhỏ theo từng Step trong tài liệu này.
+## Phê duyệt kế hoạch
+
+- [ ] Product Owner xác nhận scope/thứ tự US01–US70 và SCR-01–SCR-25.
+- [ ] FE lead xác nhận routes, interaction states, accessibility và typed-client workflow.
+- [ ] BE/AI lead xác nhận modular-monolith boundaries, three-Agent design và provider contracts.
+- [ ] Security/Operations xác nhận consent, retention, audit, deployment và rollback.
+- [ ] Nhóm cam kết không đóng phase khi UI và BE chưa tích hợp end-to-end.
