@@ -29,9 +29,9 @@ Thiết lập lifecycle hooks, cách đọc biến môi trường và cấu trú
 Kết quả cần là một backend khởi động ổn định, báo lỗi cấu hình rõ ràng và có smoke test ban đầu.
 
 **Acceptance Criteria**
-- [ ] Backend khởi động được và GET /health trả trạng thái thành công.
-- [ ] Cấu hình đọc từ environment với validation khi thiếu biến bắt buộc.
-- [ ] Có smoke test cho application startup và health endpoint.
+- [x] Backend khởi động được và GET /health trả trạng thái thành công.
+- [x] Cấu hình đọc từ environment với validation khi thiếu biến bắt buộc.
+- [x] Có smoke test cho application startup và health endpoint.
 
 **Verification** Chạy backend test và gọi /health trong môi trường local.
 
