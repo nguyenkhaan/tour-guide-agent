@@ -366,14 +366,14 @@ flowchart LR
 
 ## 13. Tra cứu nhật ký kỹ thuật và truy vết lỗi
 
-**Mô tả:** Nhân viên vận hành hoặc kỹ sư được cấp quyền tra cứu nhật ký, lọc theo mã chuyến đi, Agent, mã lỗi hoặc thời gian và xem dòng thực thi để truy vết. Trước khi mở chi tiết log của người dùng, phải khai báo cả mục đích truy cập và Ticket ID; mỗi lần truy cập được ghi nhận danh tính, thời gian, IP, mục đích và Ticket ID.
+**Mô tả:** Nhân viên vận hành (Operator) hoặc Quản trị viên (Admin) được cấp quyền tra cứu nhật ký, lọc theo mã chuyến đi, Agent, mã lỗi hoặc thời gian; Admin có quyền xem dòng thực thi chi tiết và sự bàn giao giữa các Agent để truy vết lỗi. Trước khi mở chi tiết log của người dùng, bắt buộc phải khai báo cả mục đích truy cập và Ticket ID; mỗi lần truy cập được ghi nhận danh tính, thời gian, IP, mục đích và Ticket ID vào nhật ký an ninh.
 
 **Đối chiếu:** US68–US70. Áp dụng yêu cầu khai báo cả mục đích và Ticket ID của US69; dữ liệu chỉ dùng để cung cấp, hỗ trợ và bảo vệ dịch vụ.
 
 ```mermaid
 flowchart LR
-    O["Nhân viên vận hành được cấp quyền"]
-    E["Kỹ sư AI / hệ thống được cấp quyền"]
+    O["Nhân viên vận hành (Operator)"]
+    AD["Quản trị viên (Admin)"]
     subgraph S["Tour Guide Agent — Nhật ký kỹ thuật"]
         A([Tra cứu và lọc nhật ký kỹ thuật])
         B([Mở chi tiết log của người dùng])
@@ -384,9 +384,9 @@ flowchart LR
     end
     O --- A
     O --- B
-    E --- A
-    E --- B
-    E --- G
+    AD --- A
+    AD --- B
+    AD --- G
     A -.->|«include»| C
     B -.->|«include»| C
     B -.->|«include»| D
@@ -414,4 +414,33 @@ flowchart LR
     B -.->|«include»| E
     D -.->|«include»| F
     E -.->|«include»| F
+```
+
+## 15. Quản trị kho dữ liệu và Phê duyệt kiến nghị (Maker – Checker)
+
+**Mô tả:** Nhân viên vận hành (Operator) gửi các kiến nghị thay đổi (cập nhật thông tin địa điểm, báo cáo sự cố khẩn cấp hoặc phản ánh logic AI) lên hệ thống. Quản trị viên (Admin) là người có thẩm quyền duy nhất xem xét, phê duyệt hoặc từ chối kiến nghị; khi phê duyệt, dữ liệu tự động cập nhật vào kho địa điểm. Ngoài ra, Admin toàn quyền thêm mới, chỉnh sửa, xóa địa điểm, quản trị tài khoản người dùng và cấu hình tham số hệ thống.
+
+**Đối chiếu:** US71–US75.
+
+```mermaid
+flowchart LR
+    O["Nhân viên vận hành (Operator — Maker)"]
+    AD["Quản trị viên (Admin — Checker)"]
+    subgraph S["Tour Guide Agent — Quản trị & Maker-Checker"]
+        A([Tạo và gửi kiến nghị thay đổi])
+        B([Xem danh sách kiến nghị chờ duyệt])
+        C([Phê duyệt hoặc từ chối kiến nghị])
+        D([Tự động cập nhật kho địa điểm])
+        E([Toàn quyền CRUD kho địa điểm du lịch])
+        F([Quản trị tài khoản và phân quyền])
+        G([Cấu hình tham số hệ thống])
+    end
+    O --- A
+    AD --- B
+    AD --- C
+    AD --- E
+    AD --- F
+    AD --- G
+    C -.->|«include»: khi phê duyệt| D
+    C -.->|«include»| B
 ```

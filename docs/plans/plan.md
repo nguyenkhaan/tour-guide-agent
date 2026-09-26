@@ -153,12 +153,12 @@ Dữ liệu GPS phải gắn với trạng thái consent và thời điểm hế
 ### Step 2.4 - Implement Authentication and Role Authorization
 
 **Mô tả** Triển khai đăng ký, đăng nhập, đăng xuất và quản lý phiên người dùng.  
-Áp dụng ba role tối thiểu là user, operator và engineer, đồng thời kiểm tra quyền sở hữu dữ liệu giữa các tài khoản.  
+Áp dụng ba role là user, operator và admin (theo cơ chế Permission-based authorization), đồng thời kiểm tra quyền sở hữu dữ liệu giữa các tài khoản.  
 Các lỗi authentication và authorization phải có cấu trúc nhất quán để frontend xử lý rõ ràng.
 
 **Acceptance Criteria**
 - [ ] User có thể tạo tài khoản, đăng nhập, đăng xuất và truy cập dữ liệu thuộc sở hữu.
-- [ ] Operator/engineer chỉ truy cập endpoint vận hành đúng quyền.
+- [ ] Operator/admin chỉ truy cập endpoint vận hành đúng quyền.
 - [ ] Authentication failure và authorization failure trả lỗi nhất quán.
 
 **Verification** API integration test cho happy path, sai credential, sai role và cross-account access.
@@ -687,10 +687,10 @@ Từ Phase 3, mọi phase là một **vertical increment** có thể kiểm th�
 
 ## Phase 12 - Audit, privacy và hỗ trợ vận hành
 
-**Kết quả nghiệp vụ:** Operator/Engineer được cấp quyền có thể truy vết an toàn; user transparency và retention được kiểm chứng xuyên hệ thống.
+**Kết quả nghiệp vụ:** Operator/Admin được cấp quyền có thể truy vết an toàn; user transparency và retention được kiểm chứng xuyên hệ thống.
 
-- **Màn hình:** SCR-24, SCR-25.
-- **Phạm vi:** US68–US70; hoàn thiện US65–US67 và shared retention.
+- **Màn hình:** SCR-24, SCR-25, SCR-29.
+- **Phạm vi:** US68–US70; US75; hoàn thiện US65–US67 và shared retention.
 - **Phụ thuộc:** Audit events Phases 3–11 và role foundation Phase 2.
 
 ### Slice 12.1 - Audit search và protected detail
@@ -713,7 +713,7 @@ Từ Phase 3, mọi phase là một **vertical increment** có thể kiểm th�
 
 **FE**
 
-- [ ] SCR-25 hiển thị redacted input, tool/result, source, handoff, validation, error và versions.
+- [ ] SCR-25 hiển thị redacted input, tool/result, source, handoff, validation, error và versions cho Admin.
 - [ ] Deep link dữ liệu đã dọn hiển thị “đã hết hạn”, không tạo broken UI.
 
 **BE**
@@ -724,7 +724,7 @@ Từ Phase 3, mọi phase là một **vertical increment** có thể kiểm th�
 
 **Tích hợp và kiểm thử**
 
-- [ ] Engineer tái dựng được Planner→Critic/Booking fixture lỗi mà không thấy secret/chain-of-thought.
+- [ ] Admin tái dựng được Planner→Critic/Booking fixture lỗi mà không thấy secret/chain-of-thought.
 - [ ] Time-travel E2E và cleanup/restore drill bao phủ PostgreSQL + Object Storage.
 
 ### Checkpoint Phase 12

@@ -17,6 +17,10 @@
 ## Tài khoản và cá nhân hóa
 
 - Đăng ký, đăng nhập và quản lý tài khoản cá nhân.
+- Hệ thống hỗ trợ 3 vai trò:
+  - **User (Khách du lịch)**: quản lý hồ sơ, lập kế hoạch, đồng hành và lưu giữ lịch sử chuyến đi cá nhân.
+  - **Operator (Nhân viên vận hành — Maker)**: kiểm duyệt đánh giá, hỗ trợ giải quyết sự cố theo Ticket ID và tạo kiến nghị cập nhật dữ liệu.
+  - **Admin (Quản trị viên — Checker)**: toàn quyền quản trị kho địa điểm, phê duyệt kiến nghị từ Operator, quản lý tài khoản, cấu hình tham số và giám sát kỹ thuật hệ thống.
 - Cập nhật hồ sơ du lịch gồm sở thích, nhu cầu đặc biệt và ngân sách thường dùng.
 - Xem lịch sử hội thoại, kế hoạch, chuyến đi và bản tổng kết.
 - Cá nhân hóa đề xuất từ hồ sơ và dữ liệu chuyến đi đã được người dùng xác nhận.
@@ -31,6 +35,7 @@
 
 ## Khám phá địa điểm du lịch
 
+- Danh mục địa điểm được Admin quản trị tập trung; Operator tiếp nhận thông tin thực tế và gửi kiến nghị cập nhật (Maker - Checker) để Admin phê duyệt.
 - Gợi ý địa điểm theo sở thích, vị trí, thời gian, ngân sách và thông tin người tham gia.
 - Tìm địa điểm gần vị trí GPS hiện tại hoặc vị trí do người dùng cung cấp.
 - Tìm địa điểm có cảnh quan hoặc đặc điểm tương đồng với ảnh đầu vào.
@@ -112,8 +117,8 @@ Có thể thực hiện chỉnh tay hoặc thông qua Agent.
 
 - Lưu nhật ký kiểm toán gồm đầu vào, phản hồi, nguồn dữ liệu, công cụ đã gọi, kết quả, lý do tóm tắt, lỗi và phiên bản Agent.
 - Cho phép người dùng xem nguồn, cảnh báo, thay đổi và lý do quyết định của chuyến đi.
-- Cho phép đội vận hành tra cứu log kỹ thuật theo phân quyền.
-- Trước khi mở chi tiết log kỹ thuật, yêu cầu khai báo cả mục đích truy cập và Ticket ID.
+- Cho phép đội vận hành (Operator) và Quản trị viên (Admin) tra cứu log kỹ thuật theo phân quyền; Admin có quyền xem xét kỹ thuật chuyên sâu đối với luồng thực thi và sự bàn giao giữa các Agent.
+- Trước khi mở chi tiết log kỹ thuật của khách hàng, bắt buộc khai báo cả mục đích truy cập và Ticket ID.
 - Ghi nhận người thực hiện, thời gian, địa chỉ IP, mục đích truy cập và Ticket ID cho mỗi lần truy cập log kỹ thuật.
 - Hỗ trợ truy vết lỗi và kiểm tra lại quyết định của Agent từ nhật ký kiểm toán.
 

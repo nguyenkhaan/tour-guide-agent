@@ -24,15 +24,16 @@ Nếu bốn tài liệu nguồn mâu thuẫn, dừng phần việc bị ảnh h�
 
 - Ngôn ngữ sản phẩm hiện tại là tiếng Việt.
 - Một tài khoản có thể lập kế hoạch cho nhiều người; không có cộng tác nhiều tài khoản, quản trị đoàn hoặc điều hành tour.
-- Tài khoản hỗ trợ đăng ký, đăng nhập, đăng xuất, hồ sơ du lịch và lịch sử.
+- Tài khoản hỗ trợ đăng ký, đăng nhập, đăng xuất, hồ sơ du lịch và lịch sử; phân quyền 3 vai trò: User, Operator, Admin.
 - Mỗi yêu cầu lập kế hoạch tạo từ 1 đến 4 lộ trình.
 - Chỉ có ba Agent: Planner, Critic/Evaluator và Booking & Logistics.
 - Critic/Evaluator bắt buộc kiểm tra lộ trình mới và thay đổi quan trọng.
 - Agent/background job chỉ tạo đề xuất; finalized plan chỉ đổi sau khi người dùng chấp nhận.
+- Áp dụng cơ chế Maker – Checker: Operator tạo kiến nghị thay đổi, Admin xem xét và phê duyệt.
 - Hệ thống không tự đặt chỗ, giữ tiền hoặc thanh toán.
 - Không lưu/hiển thị chain-of-thought thô; chỉ lưu lý do tóm tắt có cấu trúc và dữ liệu truy vết cần thiết.
 - Thông tin biến động phải có nguồn, thời điểm kiểm tra và độ tin cậy.
-- Mở log kỹ thuật bắt buộc có quyền phù hợp, mục đích truy cập và Ticket ID.
+- Mở log kỹ thuật của người dùng bắt buộc có quyền phù hợp, mục đích truy cập và Ticket ID.
 - GPS, media gốc, working/trip memory và log kỹ thuật chi tiết hết hạn tối đa 7 ngày.
 - Weather Monitor, Trip Completion và Retention Cleanup chạy trong modular monolith; chưa cần message broker.
 - Không thêm microservice, distributed cache hoặc vector database nếu chưa có nhu cầu đã đo lường.
@@ -85,12 +86,16 @@ Route chỉ là định hướng; nhóm có thể đổi tên nhưng phải gi�
 | SCR-17 | Cảnh báo và replanning — `/trips/:id/alerts` | User | Alert severity/timeline, unavailable place, proposal diff, accept/reject | Weather Monitor, impact rules, Planner/Critic proposal, approval/version API | 9 |
 | SCR-18 | Viết và quản lý review — `/places/:id/reviews/new`, `/reviews/:id` | User | Rating/comment, private default, request-public/status, edit privacy | Review state machine, ownership, moderation submission | 10 |
 | SCR-19 | Review công khai và báo cáo — trong place detail | User | Approved reviews, report dialog/status | Public review query, report/rate-limit workflow | 10 |
-| SCR-20 | Hàng đợi kiểm duyệt — `/operations/moderation` | Operator | Filters, review/report detail, approve/reject/hide, reason required | Role-protected moderation commands, immutable moderation audit | 10 |
+| SCR-20 | Hàng đợi kiểm duyệt — `/operations/moderation` | Operator / Admin | Filters, review/report detail, approve/reject/hide, reason required | Role-protected moderation commands, immutable moderation audit | 10 |
 | SCR-21 | Bản nháp tổng kết — `/trips/:id/summary` | User | Đã đi/bỏ qua/phát sinh, evidence/confidence, sửa trước confirm | Idempotent completion job, activity classification/correction API | 11 |
 | SCR-22 | Chi phí, nhật ký và media — panel trong summary | User | Optional expenses, variance, diary, photos, ratings/reviews | Expense calculation, media retention, reuse review module | 11 |
 | SCR-23 | Gợi ý chuyến tiếp theo — `/trips/:id/next-trip` | User | 1–3 cards, explanation, start planning | Confirmed-summary profile update, suggestion API, prefilled conversation | 11 |
-| SCR-24 | Tìm kiếm audit — `/operations/audit` | Operator/Engineer | Filter theo trip/Agent/error/time, pagination, role-aware states | Protected audit search, redaction, retention-aware results | 12 |
-| SCR-25 | Chi tiết trace — `/operations/audit/:id` | Operator/Engineer | Purpose + Ticket ID gate, execution flow, tool/handoff/error/version | Access audit, trace projection, role/field-level authorization | 12 |
+| SCR-24 | Tìm kiếm audit — `/operations/audit` | Operator / Admin | Filter theo trip/Agent/error/time, pagination, role-aware states | Protected audit search, redaction, retention-aware results | 12 |
+| SCR-25 | Chi tiết trace — `/operations/audit/:id` | Admin / Operator | Purpose + Ticket ID gate, execution flow, tool/handoff/error/version | Access audit, trace projection, role/field-level authorization | 12 |
+| SCR-26 | Quản lý địa điểm du lịch — `/admin/places` | Admin | CRUD danh mục địa điểm, giờ mở cửa, giá vé, kích hoạt/tạm ẩn | Curated place catalog admin API, spatial updates | 4 |
+| SCR-27 | Kiến nghị & Phê duyệt Maker-Checker — `/operations/proposals` | Operator / Admin | Form tạo kiến nghị (Operator), duyệt/từ chối kèm ghi chú (Admin) | Operator proposal API, approval auto-update catalog | 10 |
+| SCR-28 | Quản trị người dùng & phân quyền — `/admin/users` | Admin | Danh sách người dùng, khóa/mở khóa tài khoản (ban), gán quyền Operator | User administration API, ban policy enforcement | 2 |
+| SCR-29 | Cấu hình hệ thống — `/admin/configs` | Admin | Tinh chỉnh tham số toàn cục (retention days, chu kỳ quét) | System configuration API | 12 |
 
 ### 5.1. Thành phần dùng chung bắt buộc
 
@@ -105,8 +110,9 @@ Route chỉ là định hướng; nhóm có thể đổi tên nhưng phải gi�
 ### 5.2. Quy tắc navigation và authorization
 
 - Guest chỉ truy cập SCR-01.
-- User chỉ xem/sửa dữ liệu thuộc tài khoản của mình; không truy cập SCR-20, SCR-24 hoặc SCR-25.
-- Operator truy cập moderation/audit theo quyền; Engineer truy cập trace theo quyền.
+- User chỉ xem/sửa dữ liệu thuộc tài khoản của mình; không truy cập SCR-20, SCR-24 đến SCR-29.
+- Operator truy cập kiểm duyệt (SCR-20), tạo kiến nghị Maker-Checker (SCR-27), và tra cứu audit theo Ticket ID (SCR-24, SCR-25).
+- Admin toàn quyền truy cập khu vực vận hành và quản trị (SCR-20 đến SCR-29), bao gồm quản lý kho địa điểm, phê duyệt kiến nghị Maker-Checker, quản trị người dùng, cấu hình hệ thống và xem biểu đồ dòng thực thi AI.
 - UI guard chỉ cải thiện trải nghiệm; BE luôn kiểm tra role và ownership độc lập.
 - Deep link vào dữ liệu đã hết hạn phải hiển thị trạng thái rõ ràng, không trả signed URL đã vô hiệu.
 

@@ -150,14 +150,14 @@ API Service là cổng vào duy nhất của backend. Module này không chứa 
 Các thành phần bên trong:
 
 - **FastAPI Routers**: cung cấp REST API và SSE, ánh xạ request/response và mã lỗi.
-- **Authentication & Authorization**: xác thực người dùng, kiểm tra quyền của người dùng và nhân viên vận hành.
+- **Authentication & Authorization**: xác thực người dùng, kiểm tra phân quyền cho 3 vai trò: User, Operator và Admin (áp dụng cơ chế Permission-based authorization).
 - **Request Validation**: kiểm tra schema, định dạng tệp, kích thước dữ liệu và các trường bắt buộc như ngày đi, nơi xuất phát và ngân sách.
-- **Account & Profile**: tài khoản, hồ sơ du lịch, sở thích và nhu cầu đặc biệt.
+- **Account & Profile**: tài khoản, hồ sơ du lịch, sở thích, nhu cầu đặc biệt và quản lý trạng thái tài khoản (khóa/mở khóa bởi Admin).
 - **Trip Request & Conversation**: hội thoại, bản tóm tắt yêu cầu và lịch sử trao đổi.
-- **Destination & Itinerary**: địa điểm, lựa chọn của người dùng, lịch trình, phiên bản kế hoạch và thao tác chỉnh sửa.
+- **Destination & Itinerary**: địa điểm, danh mục do Admin quản trị, kiến nghị thay đổi (Maker - Checker) từ Operator, lựa chọn của người dùng, lịch trình, phiên bản kế hoạch và thao tác chỉnh sửa.
 - **Booking & Trip Operations**: lựa chọn dịch vụ, theo dõi chuyến đi, cảnh báo và yêu cầu thay đổi kế hoạch.
-- **Review & Trip Summary**: đánh giá, quyền riêng tư, kiểm duyệt và tổng kết chuyến đi.
-- **Audit & Operations**: truy vấn nhật ký theo phân quyền; bắt buộc ghi cả mục đích truy cập và Ticket ID trước khi mở chi tiết log kỹ thuật.
+- **Review & Trip Summary**: đánh giá, quyền riêng tư, kiểm duyệt bởi Operator/Admin và tổng kết chuyến đi.
+- **Audit & Operations**: truy vấn nhật ký theo phân quyền cho Operator và Admin; bắt buộc ghi cả mục đích truy cập và Ticket ID trước khi mở chi tiết log kỹ thuật; Admin giám sát biểu đồ dòng thực thi AI.
 - **Media & Location**: tiếp nhận GPS, ảnh và media; tệp nhị phân được lưu trong Object Storage.
 - **Background Scheduler & Job Runner**: chạy Weather Monitor, Trip Completion và Retention Cleanup mà không cần tạo service riêng.
 - **AI Orchestrator Port**: giao diện nội bộ để gửi tác vụ AI và nhận kết quả có cấu trúc.
@@ -328,12 +328,13 @@ Hệ thống chỉ sử dụng hai dịch vụ lưu trữ vật lý. PostGIS là
 
 PostgreSQL là nguồn dữ liệu có cấu trúc duy nhất, lưu:
 
-- tài khoản, hồ sơ du lịch và tùy chọn riêng tư;
+- tài khoản (User, Operator, Admin), hồ sơ du lịch, phân quyền và trạng thái khóa tài khoản;
 - hội thoại, yêu cầu chuyến đi và bản tóm tắt đã xác nhận;
-- địa điểm, lịch trình, phiên bản kế hoạch và lựa chọn dịch vụ;
-- đánh giá, kiểm duyệt, tổng kết và chi phí thực tế;
+- địa điểm, danh mục, nội dung thuyết minh, kiến nghị thay đổi (Maker - Checker) và cấu hình hệ thống;
+- lịch trình, phiên bản kế hoạch, kết quả thẩm định Critic và lựa chọn dịch vụ;
+- đánh giá, báo cáo vi phạm, kiểm duyệt, tổng kết và chi phí thực tế;
 - working/trip memory của Agent trong tối đa 7 ngày;
-- nguồn dữ liệu, độ tin cậy, tool call, lỗi và audit log kỹ thuật trong tối đa 7 ngày.
+- nguồn dữ liệu, độ tin cậy, tool call, lỗi, nhật ký truy cập an ninh và audit log kỹ thuật trong tối đa 7 ngày.
 
 PostGIS mở rộng PostgreSQL để lưu tọa độ và thực hiện truy vấn không gian như tìm địa điểm trong bán kính, tính khoảng cách và đối chiếu vị trí GPS. Dữ liệu GPS chỉ được xử lý theo trạng thái đồng ý của người dùng.
 
