@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI
+from src.modules.health.health_route import health_router
 from sqlalchemy import text
 from src.db import engine
 
@@ -28,5 +29,6 @@ app = FastAPI(lifespan=lifespan)
 api_router = APIRouter(
     prefix = "/api"
 )
+api_router.include_router(health_router) 
 
 app.include_router(api_router)

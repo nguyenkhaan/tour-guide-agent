@@ -1,3 +1,13 @@
+"""
+Postgres SQL command 
+## Drop schema public -> reset database if failed qua roi 
+DROP SCHEMA public CASCADE;
+CREATE SCHEMA public;
+
+## PostGIS extension CAST OFF
+CREATE EXTENSION postgis;
+
+"""
 from sqlalchemy import DateTime
 import datetime 
 from sqlalchemy.ext.asyncio import (

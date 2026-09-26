@@ -4,5 +4,6 @@ health_router = APIRouter(
     prefix = "/health", tags = ["Health"]
 )
 
-def hello_world(): 
-    print('Hello world') 
+@health_router.get("") 
+async def liveness(): 
+    return "Hello world. Build with Cloudian 💙 Cloud"
