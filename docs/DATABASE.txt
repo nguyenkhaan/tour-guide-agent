@@ -1,147 +1,157 @@
-//User account 
+//Enum 
+enum AccountStatus {
+    DISABLED
+    BANNED
+    ACTIVE
+}
+enum UserRole {
+    USER
+    ADMIN
+    OPERATOR
+}
+enum AgentSessionStatus {
+    ARCHIVED
+    ACTIVE
+}
+enum TripRequestStatus {
+    DRAFT
+    CONFIRMED
+    PLANNING
+    PLANNED
+    CANCELLED
+}
+enum MediaImage {
+    REQUEST_IMAGE
+    REVIEW_PHOTO 
+    SUMMARY_PHOTO
+}
+enum ItineraryStatus {
+    DRAFT
+    REVIEWING
+    SELECTED
+}
+enum ItineraryProposalStatus {
+    pending/accepted/rejected
+}
+
+
 table users {
-    id UUID PK // Mã định danh duy nhất của người dùng
-    email VARCHAR(255) // Địa chỉ email dùng để đăng nhập
-    password_hash VARCHAR(255) // Mật khẩu đã băm an toàn
-    full_name VARCHAR(100) // Họ và tên hiển thị
-    role VARCHAR(20) // Phân quyền vai trò người dùng
-    is_active BOOLEAN // Trạng thái kích hoạt tài khoản
-    is_banned BOOLEAN // Cờ khóa tài khoản
-    ban_reason TEXT // Lý do khóa tài khoản
-    banned_at TIMESTAMP // Thời điểm khóa tài khoản
-    banned_by UUID // Admin thực hiện khóa
-    created_at TIMESTAMP // Thời điểm tạo tài khoản
-    updated_at TIMESTAMP // Thời điểm cập nhật gần nhất
+    id uuid PK 
+    email VARCHAR(100) unique //required
+    password VARCHAR(200)
+    full_name VARCHAR(200)
+    status AccountStatus
+    role UserRole
+    created_at TIMESTAMP
+    updated_at TIMESTAMP
 }
 
-// Bảng Hồ sơ Du lịch Cá nhân hóa
-table user_profiles {
-  user_id UUID PK // Khóa chính và ngoại liên kết 1-1 với người dùng
-  travel_preferences JSONB // Sở thích và phong cách du lịch
-  special_needs TEXT // Nhu cầu đặc biệt của người dùng
-  default_budget NUMERIC(15,2) // Ngân sách thường dùng mặc định
-  preferred_currency VARCHAR(3) // Đơn vị tiền tệ mặc định
-  home_location GEOMETRY(Point,4326) // Tọa độ nơi cư trú mặc định
-  updated_at TIMESTAMP // Thời điểm cập nhật hồ sơ gần nhất
+table user_profile {
+    user_id UUID PK // Khóa chính và ngoại liên kết 1-1 với người dùng
+    travel_preferences JSONB // Sở thích và phong cách du lịch
+    special_needs TEXT // Nhu cầu đặc biệt của người dùng
+    default_budget NUMERIC(15,2) //> 0 
+    preferred_currency VARCHAR(3) // Đơn vị tiền tệ mặc định
+    created_at TIMESTAMP
+    updated_at TIMESTAMP // Thời điểm cập nhật hồ sơ gần nhất
 }
 
-// Bảng Quản lý Phiên làm việc & Refresh Token
-table user_sessions {
-  id UUID PK // Định danh duy nhất của phiên
-  user_id UUID // Người sở hữu phiên đăng nhập
-  refresh_token_hash VARCHAR(255) // Mã băm của Refresh Token
-  user_agent VARCHAR(255) // Thông tin thiết bị và trình duyệt
-  client_ip VARCHAR(45) // Địa chỉ IP đăng nhập
-  expires_at TIMESTAMP // Thời điểm hết hạn phiên
-  created_at TIMESTAMP // Thời điểm khởi tạo phiên
+table agent_session {
+    id uuid PK
+    user_id string 
+    summary TEXT //A short summary about agent's session
+    title string
+    status AgentSessionStatus
+    created_at TIMESTAMP
+    updated_at TIMESTAMP
 }
 
-// Bảng Phiên Hội thoại Tự nhiên với AI
-table conversations {
-  id UUID PK // Định danh hội thoại
-  user_id UUID // Người dùng tạo hội thoại
-  title VARCHAR(255) // Tiêu đề hội thoại
-  status VARCHAR(20) // Trạng thái phiên hội thoại
-  created_at TIMESTAMP // Thời điểm bắt đầu hội thoại
-  updated_at TIMESTAMP // Thời điểm có tin nhắn mới nhất
-}
-
-// Bảng Chi tiết Tin nhắn trong Hội thoại
 table messages {
-  id UUID PK // Định danh tin nhắn
-  conversation_id UUID // Thuộc phiên hội thoại nào
-  sender_type VARCHAR(20) // Đối tượng gửi tin nhắn
-  agent_type VARCHAR(30) // Agent cụ thể phản hồi
-  content TEXT // Nội dung tin nhắn
-  metadata JSONB // Dữ liệu cấu trúc kèm theo
-  created_at TIMESTAMP // Thời điểm gửi tin nhắn
+    id UUID PK
+    agent_session_id UUID
+    role VARCHAR(10) //user or assistant
+    content TEXT 
+    metadata JSONB
+    agent_run_id UUID // Liên kết assistant message với lần chạy Agent tạo ra nó
+    created_at TIMESTAMP
 }
 
-// Bảng Tóm tắt Yêu cầu Chuyến đi
 table trip_requests {
-  id UUID PK // Định danh yêu cầu chuyến đi
-  user_id UUID // Người lập yêu cầu
-  conversation_id UUID // Phiên hội thoại khởi tạo yêu cầu
-  status VARCHAR(20) // Trạng thái bản tóm tắt
-  version INT // Phiên bản của tóm tắt
-  origin_name VARCHAR(255) // Tên địa điểm xuất phát
-  origin_location GEOMETRY(Point,4326) // Tọa độ điểm xuất phát
-  start_date DATE // Ngày khởi hành
-  duration_days INT // Thời lượng chuyến đi
-  budget NUMERIC(15,2) // Tổng mức ngân sách dự kiến
-  currency VARCHAR(3) // Đơn vị tiền tệ
-  companions_count INT // Số lượng người đi cùng
-  companions_info JSONB // Thông tin người đi cùng
-  preferences JSONB // Sở thích riêng chỉ định
-  confirmed_at TIMESTAMP // Thời điểm xác nhận chốt tóm tắt
-  created_at TIMESTAMP // Thời điểm tạo yêu cầu
-  updated_at TIMESTAMP // Cập nhật gần nhất
+    id UUID PK  
+    parent_trip_request_id UUID // Liên kết phiên bản yêu cầu trước đó
+    user_id uuid 
+    agent_session_id uuid
+    status TripRequestStatus 
+    version INT
+    origin_name VARCHAR(255) // Tên địa điểm xuất phát
+    origin_location GEOMETRY(Point,4326) // Tọa độ điểm xuất phát
+    destination_text VARCHAR(500) // Điểm đến hoặc khu vực người dùng mong muốn
+    start_date DATE // Ngày khởi hành
+    duration_days INT // Thời lượng chuyến đi
+    budget NUMERIC(15,2) // Tổng mức ngân sách dự kiến
+    currency VARCHAR(3) // Đơn vị tiền tệ
+    companions_count INT // Số lượng người đi cùng
+    companions_info JSONB // Thông tin người đi cùng
+    preferences JSONB // Sở thích riêng chỉ định
+    confirmed_at TIMESTAMP // Thời điểm xác nhận chốt tóm tắt
+    created_at TIMESTAMP // Thời điểm tạo yêu cầu
+    updated_at TIMESTAMP // Cập nhật gần nhất
 }
 
-// Bảng Metadata Tệp Đa phương tiện & Object Storage
 table media_files {
-  id UUID PK // Định danh tệp đa phương tiện
-  user_id UUID // Người sở hữu tải lên
-  conversation_id UUID // Ngữ cảnh phiên chat
-  object_key VARCHAR(500) // Đường dẫn file lưu trữ
-  file_name VARCHAR(255) // Tên file gốc tải lên
-  file_size_bytes BIGINT // Dung lượng tệp
-  mime_type VARCHAR(100) // Định dạng tệp
-  purpose VARCHAR(50) // Mục đích sử dụng tệp
-  is_temporary BOOLEAN // Đánh dấu dữ liệu tạm
-  expires_at TIMESTAMP // Hạn lưu trữ
-  is_expired BOOLEAN // Cờ đánh dấu hết hạn
-  created_at TIMESTAMP // Thời điểm tải lên
+    id UUID PK // Định danh tệp đa phương tiện
+    user_id UUID // Người sở hữu tải lên
+    message_id UUID //Tin nhan upload len bang tin nhan nao 
+    object_key VARCHAR(500) // Đường dẫn file lưu trữ
+    file_name VARCHAR(255) // Tên file gốc tải lên
+    file_size_bytes BIGINT // Dung lượng tệp
+    mime_type VARCHAR(100) // Định dạng tệp
+    purpose MediaImage //Muc dich cua media 
+    created_at TIMESTAMP // Thời điểm tải lên
 }
 
-// Bảng Danh mục Phân loại Địa điểm Du lịch
 table place_categories {
-  id SERIAL PK // Mã danh mục tự tăng
-  name VARCHAR(100) // Tên phân loại địa điểm
-  slug VARCHAR(100) // Chuỗi định danh URL
-  description TEXT // Mô tả chi tiết phân loại
-  created_by UUID // Admin khởi tạo danh mục
+    id SERIAL PK // Mã danh mục tự tăng
+    name VARCHAR(100) // Tên phân loại địa điểm
+    slug VARCHAR(100) // Chuỗi định danh URL
+    description TEXT // Mô tả chi tiết phân loại
+    created_at TIMESTAMP 
 }
 
-// Bảng Kho Địa điểm Du lịch
 table places {
-  id UUID PK // Định danh địa điểm
-  category_id INT // Danh mục phân loại
-  name VARCHAR(255) // Tên địa điểm
-  slug VARCHAR(255) // Slug nhận diện duy nhất
-  description TEXT // Mô tả địa điểm
-  address VARCHAR(500) // Địa chỉ thực tế
-  location GEOMETRY(Point,4326) // Tọa độ địa lý WGS84
-  province VARCHAR(100) // Tỉnh hoặc Thành phố
-  opening_hours JSONB // Giờ mở và đóng cửa
-  min_price NUMERIC(12,2) // Giá vé tối thiểu
-  max_price NUMERIC(12,2) // Giá vé tối đa
-  currency VARCHAR(3) // Đơn vị tiền tệ
-  average_rating NUMERIC(3,2) // Điểm đánh giá trung bình
-  verified_reviews_count INT // Số lượng bài đánh giá hợp lệ
-  is_verified BOOLEAN // Đã qua kiểm duyệt
-  is_active BOOLEAN // Trạng thái hoạt động
-  created_by UUID // Admin thêm địa điểm
-  updated_by UUID // Admin cập nhật gần nhất
-  created_at TIMESTAMP // Thời điểm tạo
-  updated_at TIMESTAMP // Cập nhật gần nhất
+    id UUID PK // Định danh địa điểm
+    category_id INT // Danh mục phân loại
+    name VARCHAR(255) // Tên địa điểm
+    slug VARCHAR(255) // Slug nhận diện duy nhất
+    description TEXT // Mô tả địa điểm
+    address VARCHAR(500) // Địa chỉ thực tế
+    location GEOMETRY(Point,4326) // Tọa độ địa lý WGS84
+    province VARCHAR(100) // Tỉnh hoặc Thành phố
+    opening_hours JSONB // Giờ mở và đóng cửa
+    min_price NUMERIC(12,2) // Giá vé tối thiểu
+    max_price NUMERIC(12,2) // Giá vé tối đa
+    currency VARCHAR(3) // Đơn vị tiền tệ
+    average_rating FLOAT
+    images JSONB  
+    visual_attributes JSONB // Đặc điểm hình ảnh của địa điểm do Vision tool trích xuất
+    is_active BOOLEAN
+    created_by UUID // Admin thêm địa điểm
+    updated_by UUID // Admin cập nhật gần nhất
+    created_at TIMESTAMP // Thời điểm tạo
+    updated_at TIMESTAMP // Cập nhật gần nhất
 }
 
-// Bảng Nội dung Thuyết minh Giọng nói & Văn bản
 table place_narrations {
-id UUID PK // Định danh bài thuyết minh
-place_id UUID // Thuộc địa điểm nào
-title VARCHAR(255) // Tiêu đề nội dung thuyết minh
-audio_object_key VARCHAR(500) // Đường dẫn file TTS
-transcript TEXT // Văn bản lời bình
-duration_seconds INT // Thời lượng phát
-language VARCHAR(10) // Ngôn ngữ thuyết minh
-is_active BOOLEAN // Trạng thái kích hoạt
-created_by UUID // Admin tải lên hoặc cập nhật
-created_at TIMESTAMP // Thời điểm tạo
+    id UUID PK // Định danh bài thuyết minh
+    place_id UUID // Thuộc địa điểm nào
+    title VARCHAR(255) // Tiêu đề nội dung thuyết minh
+    audio_object_key VARCHAR(500) // Đường dẫn file TTS
+    transcript TEXT // Văn bản lời bình
+    duration_seconds INT // Thời lượng phát
+    is_active BOOLEAN // Trạng thái kích hoạt
+    created_by UUID // Admin tải lên hoặc cập nhật
+    created_at TIMESTAMP // Thời điểm tạo
 }
-
-// Bảng Địa điểm được chọn trong bước Khám phá
 table trip_request_selected_places {
     id UUID PK // Khóa chính bảng nối
     trip_request_id UUID // Thuộc yêu cầu chuyến đi
@@ -151,290 +161,512 @@ table trip_request_selected_places {
     created_at TIMESTAMP // Thời điểm tương tác
 }
 
-// Bảng Phương án Lộ trình
 table itineraries {
-id UUID PK // Định danh lộ trình
-trip_request_id UUID // Yêu cầu chuyến đi gốc
-option_index INT // Thứ tự phương án
-version INT // Số hiệu phiên bản lộ trình
-title VARCHAR(255) // Tên phương án lộ trình
-summary TEXT // Tóm tắt tổng quan
-total_days INT // Tổng số ngày
-estimated_total_cost NUMERIC(15,2) // Dự trù kinh phí
-currency VARCHAR(3) // Đơn vị tiền tệ
-highlights JSONB // Điểm nổi bật nhất
-warnings JSONB // Cảnh báo mềm
-trade_offs TEXT // Đánh đổi khi chọn
-luggage_checklist JSONB // Danh sách vật dụng gợi ý
-ranking_score NUMERIC(5,2) // Điểm xếp hạng đề xuất
-status VARCHAR(20) // Trạng thái vòng đời lộ trình
-created_at TIMESTAMP // Thời điểm tạo
-updated_at TIMESTAMP // Cập nhật gần nhất
+    id UUID PK // Định danh lộ trình
+    trip_request_id UUID // Yêu cầu chuyến đi gốc
+    option_index INT // Thứ tự phương án
+    version INT // Số hiệu phiên bản lộ trình
+    title VARCHAR(255) // Tên phương án lộ trình
+    summary TEXT // Tóm tắt tổng quan
+    total_days INT // Tổng số ngày
+    estimated_total_cost NUMERIC(15,2) // Dự trù kinh phí
+    cost_breakdown JSONB //Be nho thoing tin ve kinh phi
+    currency VARCHAR(3) // Đơn vị tiền tệ
+    highlights JSONB // Điểm nổi bật nhất
+    warnings JSONB // Cảnh báo mềm
+    trade_offs TEXT // Đánh đổi khi chọn
+    luggage_checklist JSONB // Danh sách vật dụng gợi ý
+    ranking_score NUMERIC(5,2) // Điểm xếp hạng đề xuất
+    status ItineraryStatus // Trạng thái vòng đời lộ trình
+    created_at TIMESTAMP // Thời điểm tạo
+    updated_at TIMESTAMP // Cập nhật gần nhất
 }
 
-// Bảng Chi tiết Kế hoạch theo từng Ngày
 table itinerary_days {
-id UUID PK // Định danh ngày
-itinerary_id UUID // Thuộc lộ trình nào
-day_number INT // Ngày thứ mấy trong chuyến đi
-title VARCHAR(255) // Tiêu đề ngày
-description TEXT // Mô tả trải nghiệm chính
-estimated_daily_cost NUMERIC(15,2) // Dự trù chi phí ngày
+    id UUID PK // Định danh ngày
+    itinerary_id UUID // Thuộc lộ trình nào
+    day_number INT // Ngày thứ mấy trong chuyến đi
+    planned_date DATETIME //Ngay da len ke hoach 
+    title VARCHAR(255) // Tiêu đề ngày
+    description TEXT // Mô tả trải nghiệm chính
+    estimated_total_cost NUMERIC(15,2) // Dự trù chi phí ngày
 }
 
-// Bảng Hoạt động Chi tiết trong Ngày
 table itinerary_activities {
-id UUID PK // Định danh hoạt động
-itinerary_day_id UUID // Thuộc ngày nào
-place_id UUID // Điểm đến trong catalog
-order_index INT // Thứ tự thực hiện
-title VARCHAR(255) // Tên hoạt động
-activity_type VARCHAR(30) // Phân loại hoạt động
-description TEXT // Mô tả chi tiết
-start_time TIME // Giờ bắt đầu dự kiến
-end_time TIME // Giờ kết thúc dự kiến
-estimated_cost NUMERIC(12,2) // Chi phí dự trù hoạt động
-created_at TIMESTAMP // Thời điểm tạo
-updated_at TIMESTAMP // Cập nhật gần nhất
+    id UUID PK // Định danh hoạt động
+    itinerary_day_id UUID // Thuộc ngày nào
+    place_id UUID // Tham chiếu đến places.id
+    order_index INT // Thứ tự thực hiện
+    title VARCHAR(255) // Tên hoạt động
+    activity_type VARCHAR(30) // Phân loại hoạt động
+    description TEXT // Mô tả chi tiết
+    start_time TIME // Giờ bắt đầu dự kiến
+    end_time TIME // Giờ kết thúc dự kiến
+    estimated_cost NUMERIC(12,2) // Chi phí dự trù hoạt động
+    created_at TIMESTAMP // Thời điểm tạo
+    updated_at TIMESTAMP // Cập nhật gần nhất
 }
 
-// Bảng Chặng Di chuyển giữa 2 Hoạt động
 table itinerary_transits {
-id UUID PK // Định danh chặng di chuyển
-itinerary_day_id UUID // Thuộc ngày nào
-from_activity_id UUID // Hoạt động xuất phát
-to_activity_id UUID // Hoạt động đích đến
-transport_mode VARCHAR(30) // Phương tiện đề xuất
-estimated_duration_minutes INT // Thời gian di chuyển ước tính
-estimated_distance_km NUMERIC(8,2) // Cự ly ước tính
-estimated_cost NUMERIC(12,2) // Chi phí dự trù
-route_notes TEXT // Ghi chú cung đường
+    id UUID PK // Định danh chặng di chuyển
+    itinerary_day_id UUID // Thuộc ngày nào
+    from_activity_id UUID // Hoạt động xuất phát
+    to_activity_id UUID // Hoạt động đích đến
+    transport_mode VARCHAR(30) // Phương tiện đề xuất
+    estimated_duration_minutes INT // Thời gian di chuyển ước tính
+    estimated_distance_km NUMERIC(8,2) // Cự ly ước tính
+    estimated_cost NUMERIC(12,2) // Chi phí dự trù
+    route_notes TEXT // Ghi chú cung đường
 }
 
 // Bảng Đề xuất Chỉnh sửa Kế hoạch & Log Diff
 table itinerary_proposals {
-id UUID PK // Định danh đề xuất
-itinerary_id UUID // Lộ trình đang sửa
-base_version INT // Phiên bản gốc
-target_version INT // Phiên bản sau khi duyệt
-proposed_by VARCHAR(30) // Tác nhân đề xuất
-diff_payload JSONB // Chi tiết thay đổi
-rationale TEXT // Lý do thay đổi
-warnings JSONB // Cảnh báo phát sinh
-status VARCHAR(20) // Trạng thái phê duyệt
-user_decision_at TIMESTAMP // Thời điểm người dùng duyệt
-created_at TIMESTAMP // Thời điểm tạo đề xuất
+    id UUID PK // Định danh đề xuất
+    itinerary_id UUID // Lộ trình đang sửa
+    base_itinerary_id uuid // Phiên bản gốc
+    target_version INT // Phiên bản sau khi duyệt
+    proposed_by VARCHAR(30) // Tác nhân đề xuất
+    diff_payload JSONB // Chi tiết thay đổi
+    rationale TEXT // Lý do thay đổi
+    warnings JSONB // Cảnh báo phát sinh
+    status ItineraryProposalStatus // Trạng thái phê duyệt
+    user_decision_at TIMESTAMP // Thời điểm người dùng duyệt
+    created_at TIMESTAMP // Thời điểm tạo đề xuất
 }
 
 // Bảng Biên bản Thẩm định Khả thi từ Critic Agent
 table evaluation_results {
-id UUID PK // Định danh kết quả đánh giá
-itinerary_id UUID // Lộ trình kiểm tra
-proposal_id UUID // Đề xuất chỉnh sửa tương ứng
-agent_version VARCHAR(50) // Phiên bản Critic Agent
-is_passed BOOLEAN // Đạt điều kiện khả thi
-budget_status VARCHAR(20) // Đánh giá ngân sách
-opening_hours_status VARCHAR(20) // Đánh giá giờ mở cửa
-travel_time_status VARCHAR(20) // Đánh giá thời gian di chuyển
-safety_status VARCHAR(20) // Đánh giá rủi ro an toàn
-hard_failures JSONB // Lỗi bất khả thi
-soft_warnings JSONB // Cảnh báo mềm
-evaluated_at TIMESTAMP // Thời điểm thẩm định
-}
-
-// Bảng Tra cứu & So sánh Dịch vụ Đối tác
-table booking_offers {
-id UUID PK // Định danh gói dịch vụ
-itinerary_id UUID // Lộ trình tương ứng
-offer_type VARCHAR(30) // Loại dịch vụ
-partner_name VARCHAR(100) // Tên đối tác
-external_offer_id VARCHAR(255) // Mã gói phía đối tác
-title VARCHAR(255) // Tiêu đề gói dịch vụ
-description TEXT // Mô tả chi tiết
-final_price NUMERIC(15,2) // Giá cuối cùng thanh toán
-currency VARCHAR(3) // Đơn vị tiền tệ
-cancellation_policy TEXT // Điều kiện hoàn hủy
-redirect_url VARCHAR(1000) // URL chuyển hướng web đối tác
-checked_at TIMESTAMP // Thời điểm lấy giá API
-expires_at TIMESTAMP // Hạn hiệu lực của giá
-created_at TIMESTAMP // Thời điểm tạo
-}
-
-// Bảng Bản nháp Thông tin Hành khách Chuẩn bị Đặt chỗ
-table passenger_info_drafts {
-id UUID PK // Định danh bản nháp
-user_id UUID // Người sở hữu
-booking_offer_id UUID // Gói dịch vụ chuẩn bị
-passenger_data_sanitized JSONB // Dữ liệu hành khách đã che bảo mật
-created_at TIMESTAMP // Thời điểm lưu nháp
+    id UUID PK // Định danh kết quả đánh giá
+    itinerary_id UUID // Lộ trình kiểm tra
+    proposal_id UUID // Đề xuất chỉnh sửa tương ứng
+    agent_run_id uuid 
+    is_passed BOOLEAN // Đạt điều kiện khả thi
+    budget_status BOOLEAN // Đánh giá ngân sách
+    opening_hours_status BOOLEAN // Đánh giá giờ mở cửa
+    travel_time_status BOOLEAN // Đánh giá thời gian di chuyển
+    safety_status BOOLEAN // Đánh giá rủi ro an toàn
+    hard_failures JSONB // Lỗi bất khả thi
+    soft_warnings JSONB // Cảnh báo mềm
+    evaluated_at TIMESTAMP // Thời điểm thẩm định
 }
 
 // Bảng Chuyến đi Thực tế
 table trips {
-id UUID PK // Mã định danh chuyến đi
-user_id UUID // Người thực hiện chuyến đi
-trip_request_id UUID // Yêu cầu chuyến đi ban đầu
-finalized_itinerary_id UUID // Lộ trình chốt cuối cùng
-status VARCHAR(20) // Trạng thái vòng đời
-gps_consent BOOLEAN // Đồng ý chia sẻ GPS
-actual_start_date DATE // Ngày bắt đầu thực tế
-actual_end_date DATE // Ngày kết thúc thực tế
-created_at TIMESTAMP // Thời điểm kích hoạt
-updated_at TIMESTAMP // Cập nhật gần nhất
+    id UUID PK // Mã định danh chuyến đi
+    user_id UUID // Người thực hiện chuyến đi
+    trip_request_id UUID // Yêu cầu chuyến đi ban đầu
+    finalized_itinerary_id UUID // Lộ trình chốt cuối cùng
+    status VARCHAR(20) // Trạng thái vòng đời
+    gps_consent BOOLEAN // Đồng ý chia sẻ GPS
+    actual_start_date DATE // Ngày bắt đầu thực tế
+    actual_end_date DATE // Ngày kết thúc thực tế
+    created_at TIMESTAMP // Thời điểm kích hoạt
+    updated_at TIMESTAMP // Cập nhật gần nhất
 }
 
 // Bảng Tọa độ GPS Di chuyển Thực tế
-table gps_location_events {
-id UUID PK // Định danh sự kiện vị trí
-trip_id UUID // Thuộc chuyến đi nào
-location GEOMETRY(Point,4326) // Tọa độ GPS ghi nhận
-accuracy_meters NUMERIC(6,2) // Bán kính sai số GPS
-recorded_at TIMESTAMP // Thời điểm ghi nhận
-expires_at TIMESTAMP // Hạn lưu trữ tối đa 7 ngày
-is_expired BOOLEAN // Cờ đánh dấu hết hạn
+table gps_location_events { 
+    id UUID PK // Định danh sự kiện vị trí
+    trip_id UUID // Thuộc chuyến đi nào
+    location GEOMETRY(Point,4326) // Tọa độ GPS ghi nhận
+    accuracy_meters NUMERIC(6,2) // Bán kính sai số GPS
+    recorded_at TIMESTAMP // Thời điểm ghi nhận
+    expires_at TIMESTAMP // Hạn lưu trữ tối đa 7 ngày
+    is_expired BOOLEAN // Cờ đánh dấu hết hạn
 }
 
 // Bảng Cảnh báo Thời gian thực từ Weather Monitor
 table trip_alerts {
-  id UUID PK // Định danh cảnh báo
-  trip_id UUID // Thuộc chuyến đi nào
-  alert_type VARCHAR(30) // Loại sự cố
-  severity VARCHAR(20) // Mức độ nghiêm trọng
-  title VARCHAR(255) // Tiêu đề cảnh báo
-  message TEXT // Nội dung chi tiết
-  source VARCHAR(100) // Nguồn dữ liệu kiểm tra
-  checked_at TIMESTAMP // Thời điểm kiểm tra thông tin
-  confidence NUMERIC(3,2) // Mức độ tin cậy thông tin
-  alternative_proposal_id UUID // Phương án thay thế nếu có
-  is_resolved BOOLEAN // Trạng thái đã xử lý hoặc xem
-  created_at TIMESTAMP // Thời điểm tạo cảnh báo
+    id UUID PK // Định danh cảnh báo
+    trip_id UUID // Thuộc chuyến đi nào
+    alert_type VARCHAR(30) // Loại sự cố
+    severity VARCHAR(20) // Mức độ nghiêm trọng
+    title VARCHAR(255) // Tiêu đề cảnh báo
+    message TEXT // Nội dung chi tiết
+    source VARCHAR(100) // Nguồn dữ liệu kiểm tra
+    checked_at TIMESTAMP // Thời điểm kiểm tra thông tin
+    confidence NUMERIC(3,2) // Mức độ tin cậy thông tin
+    affected_activity_id UUID // Hoạt động bị ảnh hưởng bởi cảnh báo
+    alternative_proposal_id UUID // Phương án thay thế nếu có
+    is_resolved BOOLEAN // Trạng thái đã xử lý hoặc xem
+    created_at TIMESTAMP // Thời điểm tạo cảnh báo
 }
+
+// Enum bổ sung cho các luồng nghiệp vụ còn lại
+enum BookingOfferType {
+    HOTEL
+    FLIGHT
+    TRANSPORT
+    ACTIVITY
+}
+
+enum BookingOfferStatus {
+    AVAILABLE
+    STALE
+    UNAVAILABLE
+}
+
+enum ReviewStatus {
+    PRIVATE
+    PENDING
+    PUBLIC
+    REJECTED
+    HIDDEN
+}
+
+enum VisitVerificationStatus {
+    UNVERIFIED
+    VERIFIED
+}
+
+enum ReviewReportReason {
+    SPAM
+    ABUSE
+    IRRELEVANT
+    FALSE_INFORMATION
+    OTHER
+}
+
+enum ReviewReportStatus {
+    OPEN
+    REVIEWING
+    RESOLVED
+    REJECTED
+}
+
+enum ModerationAction {
+    APPROVE
+    REJECT
+    HIDE
+    RESTORE
+}
+
+enum ModeratorType {
+    SYSTEM
+    OPERATOR
+    ADMIN
+}
+
+enum TripSummaryStatus {
+    DRAFT
+    CONFIRMED
+}
+
+enum SummaryPlaceStatus {
+    VISITED
+    SKIPPED
+    UNPLANNED
+}
+
+enum ExpenseCategory {
+    LODGING
+    TRANSPORT
+    FOOD
+    TICKET
+    SHOPPING
+    OTHER
+}
+
+enum OperatorProposalType {
+    PLACE_UPDATE
+    WEATHER_REPORT
+    AI_ISSUE
+}
+
+enum OperatorProposalStatus {
+    PENDING
+    APPROVED
+    REJECTED
+}
+
+enum AgentType {
+    PLANNER
+    CRITIC
+    BOOKING
+}
+
+enum AgentRunTrigger {
+    USER
+    AGENT
+    BACKGROUND_JOB
+}
+
+enum AgentRunStatus {
+    RUNNING
+    COMPLETED
+    FAILED
+    CANCELLED
+    EXPIRED
+}
+
+enum ToolCallStatus {
+    RUNNING
+    SUCCEEDED
+    FAILED
+}
+
+enum AgentMemoryScope {
+    WORKING
+    TRIP
+}
+
+enum SourceEntityType {
+    PLACE
+    MESSAGE
+    ITINERARY
+    ITINERARY_PROPOSAL
+    EVALUATION_RESULT
+    BOOKING_OFFER
+    TRIP_ALERT
+}
+
+
+// Bảng Tra cứu & So sánh Dịch vụ Đối tác
+// Không lưu booking hoặc payment vì hệ thống chỉ chuyển người dùng sang đối tác.
+table booking_offers {
+    id UUID PK
+    itinerary_id UUID // Lộ trình dùng để tìm dịch vụ
+    agent_run_id UUID // Lần chạy Booking Agent tạo offer
+    offer_type BookingOfferType
+    status BookingOfferStatus
+    provider_name VARCHAR(100)
+    provider_offer_id VARCHAR(255)
+    title VARCHAR(255)
+    description TEXT
+    match_score NUMERIC(5,2) // Mức phù hợp với lịch trình và hồ sơ
+    final_price NUMERIC(15,2)
+    currency VARCHAR(3)
+    cancellation_policy TEXT
+    redirect_url VARCHAR(1000)
+    checked_at TIMESTAMP
+    expires_at TIMESTAMP
+    created_at TIMESTAMP
+}
+
 
 // Bảng Đánh giá Địa điểm
 table place_reviews {
-id UUID PK // Định danh bài đánh giá
-place_id UUID // Địa điểm đánh giá
-user_id UUID // Người viết đánh giá
-trip_id UUID // Chuyến đi tương ứng chứng thực
-rating INT // Chấm điểm số sao
-comment TEXT // Nội dung nhận xét
-privacy_status VARCHAR(20) // Trạng thái hiển thị
-is_verified_visit BOOLEAN // Xác thực chuyến đi hợp lệ
-created_at TIMESTAMP // Thời điểm tạo
-updated_at TIMESTAMP // Cập nhật gần nhất
+    id UUID PK
+    place_id UUID
+    user_id UUID
+    trip_id UUID // Chuyến đi dùng để xác minh lượt ghé thăm
+    rating INT
+    comment TEXT
+    status ReviewStatus // Mặc định PRIVATE; yêu cầu công khai chuyển sang PENDING
+    visit_status VisitVerificationStatus
+    published_at TIMESTAMP
+    created_at TIMESTAMP
+    updated_at TIMESTAMP
 }
 
-// Bảng Báo cáo Vi phạm Tiêu chuẩn Cộng đồng
+
+// Bảng Báo cáo Bài đánh giá Vi phạm
 table review_reports {
-id UUID PK // Định danh báo cáo
-review_id UUID // Bài đánh giá bị báo cáo
-reporter_user_id UUID // Người gửi báo cáo
-reason TEXT // Lý do báo cáo vi phạm
-status VARCHAR(20) // Trạng thái xử lý báo cáo
-created_at TIMESTAMP // Thời điểm gửi báo cáo
+    id UUID PK
+    review_id UUID
+    reporter_user_id UUID
+    reason_code ReviewReportReason
+    details TEXT
+    status ReviewReportStatus
+    resolved_by UUID // Operator hoặc Admin xử lý
+    resolution TEXT
+    resolved_at TIMESTAMP
+    created_at TIMESTAMP
 }
 
-// Bảng Nhật ký Kiểm duyệt Đánh giá Công khai
+
+// Bảng Lịch sử Kiểm duyệt Đánh giá
+// Giữ bảng riêng để truy vết mọi lần approve/reject/hide/restore.
 table review_moderation_logs {
-id UUID PK // Định danh bản ghi kiểm duyệt
-review_id UUID // Bài đánh giá xử lý
-moderator_id UUID // Người thực hiện kiểm duyệt
-action VARCHAR(20) // Hành động kiểm duyệt
-reason TEXT // Lý do can thiệp kiểm duyệt
-created_at TIMESTAMP // Thời điểm thực hiện
+    id UUID PK
+    review_id UUID
+    moderator_id UUID // Null nếu hệ thống tự động kiểm duyệt
+    moderator_type ModeratorType
+    action ModerationAction
+    previous_status ReviewStatus
+    new_status ReviewStatus
+    reason TEXT
+    details JSONB // Kết quả kiểm tra spam, policy, relevance
+    created_at TIMESTAMP
 }
 
-// Bảng Bản Tổng kết Hành trình
+
+// Bảng Tổng kết Chuyến đi
+// Các phần cần lọc/tổng hợp được tách thành trip_summary_places và trip_expenses.
 table trip_summaries {
-id UUID PK // Định danh bản tổng kết
-trip_id UUID // Chuyến đi tương ứng
-status VARCHAR(20) // Trạng thái bản tổng kết
-overall_rating INT // Đánh giá tổng quan
-diary_notes TEXT // Nhật ký cảm nghĩ chuyến đi
-actual_places_visited JSONB // Phân loại điểm đã đi hoặc bỏ qua
-actual_expenses JSONB // Chi phí thực tế người dùng nhập
-confirmed_at TIMESTAMP // Thời điểm xác nhận khóa dữ liệu
-created_at TIMESTAMP // Thời điểm tự động tạo
-updated_at TIMESTAMP // Cập nhật gần nhất
+    id UUID PK
+    trip_id UUID
+    status TripSummaryStatus
+    overall_rating INT
+    diary_notes TEXT
+    confirmed_at TIMESTAMP
+    created_at TIMESTAMP
+    updated_at TIMESTAMP
 }
 
-// Bảng Gợi ý Ý tưởng Chuyến đi Tiếp theo
+
+// Bảng Địa điểm Thực tế trong Tổng kết
+table trip_summary_places {
+    id UUID PK
+    trip_summary_id UUID
+    place_id UUID // Có thể null nếu địa điểm không có bản ghi tương ứng trong places
+    place_name VARCHAR(255) // Tên địa điểm, dùng khi place_id là null
+    status SummaryPlaceStatus
+    confidence NUMERIC(3,2) // Độ tin cậy khi hệ thống tự phân loại
+    evidence JSONB // GPS, tương tác hoặc xác nhận dùng để phân loại
+    is_user_corrected BOOLEAN
+    notes TEXT
+    created_at TIMESTAMP
+    updated_at TIMESTAMP
+}
+
+
+// Bảng Chi phí Thực tế
+// Tách khỏi JSONB để tổng hợp theo hạng mục và so sánh với dự trù.
+table trip_expenses {
+    id UUID PK
+    trip_summary_id UUID
+    category ExpenseCategory
+    amount NUMERIC(15,2)
+    currency VARCHAR(3)
+    spent_on DATE
+    note TEXT
+    created_at TIMESTAMP
+    updated_at TIMESTAMP
+}
+
+
+// Bảng Gợi ý Chuyến đi Tiếp theo
+// Giữ bảng riêng để hiển thị lại thẻ gợi ý và theo dõi thẻ đã mở hội thoại mới.
 table next_trip_suggestions {
-id UUID PK // Định danh gợi ý
-trip_summary_id UUID // Sinh ra từ tổng kết nào
-user_id UUID // Người nhận gợi ý
-title VARCHAR(255) // Tiêu đề chuyến đi
-description TEXT // Lý do đề xuất
-suggested_places JSONB // Danh sách địa điểm gợi ý
-estimated_budget NUMERIC(15,2) // Ước tính ngân sách
-created_at TIMESTAMP // Thời điểm tạo gợi ý
+    id UUID PK
+    trip_summary_id UUID
+    rank INT // Thứ tự từ 1 đến 3
+    title VARCHAR(255)
+    description TEXT
+    suggested_places JSONB // Danh sách nhỏ chỉ dùng để hiển thị một suggestion card
+    estimated_budget NUMERIC(15,2)
+    currency VARCHAR(3)
+    started_agent_session_id UUID // Phiên hội thoại được tạo từ gợi ý
+    created_at TIMESTAMP
+    used_at TIMESTAMP
 }
 
-// Bảng Kiến nghị Đề xuất của Operator gửi Admin
+
+// Bảng Kiến nghị Maker - Checker
 table operator_proposals {
-id UUID PK // Định danh kiến nghị
-operator_id UUID // Operator tạo kiến nghị
-proposal_type VARCHAR(30) // Loại kiến nghị
-target_place_id UUID // Địa điểm liên quan
-title VARCHAR(255) // Tiêu đề kiến nghị
-description TEXT // Chi tiết phản ánh và căn cứ
-proposed_payload JSONB // Dữ liệu đề xuất
-status VARCHAR(20) // Trạng thái phê duyệt
-admin_id UUID // Admin xử lý
-admin_note TEXT // Ghi chú phản hồi của Admin
-created_at TIMESTAMP // Thời điểm gửi kiến nghị
-reviewed_at TIMESTAMP // Thời điểm xử lý
+    id UUID PK
+    operator_id UUID
+    proposal_type OperatorProposalType
+    target_place_id UUID // Chỉ có khi kiến nghị cập nhật địa điểm
+    related_trip_id UUID // Có thể có khi báo cáo thời tiết hoặc logic AI
+    title VARCHAR(255)
+    description TEXT
+    proposed_payload JSONB // Nội dung thay đổi khác nhau theo proposal_type
+    status OperatorProposalStatus
+    admin_id UUID
+    admin_note TEXT
+    created_at TIMESTAMP
+    reviewed_at TIMESTAMP
 }
 
-// Bảng Nhật ký Thực thi của Agent
-table audit_logs {
-id UUID PK // Định danh lượt thực thi
-correlation_id UUID // Mã luồng xử lý truy vết
-user_id UUID // Người dùng liên quan
-trip_id UUID // Chuyến đi liên quan
-agent_type VARCHAR(30) // Tác nhân AI hoặc Job
-agent_version VARCHAR(50) // Phiên bản Agent
-input_summary JSONB // Đầu vào có cấu trúc
-output_summary JSONB // Quyết định dạng tóm tắt
-tools_called JSONB // Danh sách tool gọi và kết quả
-execution_duration_ms INT // Thời gian thực thi
-error_code VARCHAR(50) // Mã lỗi sự cố
-error_message TEXT // Thông điệp lỗi chi tiết
-expires_at TIMESTAMP // Hạn lưu trữ
-is_expired BOOLEAN // Cờ đánh dấu hết hạn
-created_at TIMESTAMP // Thời điểm ghi log
+
+// Bảng Một lần Thực thi Agent
+// Thay cho audit_logs gộp chung; một row chỉ biểu diễn một Agent hoặc job thực thi.
+table agent_runs {
+    id UUID PK
+    workflow_id UUID // Nhóm các lần Planner -> Critic -> Planner trong cùng luồng
+    parent_run_id UUID // Lần chạy đã bàn giao hoặc kích hoạt lần chạy này
+    user_id UUID
+    agent_session_id UUID
+    trip_request_id UUID
+    trip_id UUID
+    agent_type AgentType
+    trigger_type AgentRunTrigger
+    status AgentRunStatus
+    agent_version VARCHAR(50)
+    prompt_version VARCHAR(50)
+    input_summary JSONB // Input đã rút gọn và loại bỏ secret
+    output_summary JSONB // Output có cấu trúc, không lưu chain-of-thought
+    decision_summary TEXT // Lý do quyết định ngắn gọn cho người dùng và vận hành
+    error_code VARCHAR(50)
+    error_message TEXT
+    started_at TIMESTAMP
+    completed_at TIMESTAMP
+    expires_at TIMESTAMP // Log kỹ thuật chi tiết lưu tối đa 7 ngày
 }
 
-// Bảng Giám sát Mở Log Kỹ thuật Khách hàng
+
+// Bảng Từng Tool Call của Agent
+// Tách riêng để tra cứu theo tool, trạng thái, lỗi và thứ tự thực thi.
+table tool_calls {
+    id UUID PK
+    agent_run_id UUID
+    sequence_number INT
+    tool_name VARCHAR(100)
+    tool_version VARCHAR(50)
+    arguments JSONB // Schema khác nhau theo từng tool
+    result JSONB // Kết quả đã loại bỏ secret và dữ liệu nhạy cảm không cần thiết
+    status ToolCallStatus
+    error_code VARCHAR(50)
+    error_message TEXT
+    started_at TIMESTAMP
+    completed_at TIMESTAMP
+    expires_at TIMESTAMP // Lưu tối đa 7 ngày
+}
+
+
+// Bảng Nguồn của Thông tin Biến động
+// Không dùng JSONB vì cần tra cứu theo entity, nguồn, thời điểm và độ tin cậy.
+table information_sources {
+    id UUID PK
+    entity_type SourceEntityType
+    entity_id UUID // ID của place/message/itinerary/proposal/evaluation/offer/alert
+    field_name VARCHAR(100) // Ví dụ: opening_hours, price, weather, travel_time
+    source_name VARCHAR(255)
+    source_url VARCHAR(1000)
+    checked_at TIMESTAMP
+    confidence NUMERIC(3,2)
+    agent_run_id UUID
+    tool_call_id UUID
+    created_at TIMESTAMP
+}
+
+
+// Bảng Giám sát Truy cập Log Kỹ thuật Khách hàng
 table audit_access_logs {
-id UUID PK // Định danh truy cập
-actor_id UUID // Operator hoặc Admin truy cập
-target_user_id UUID // Khách hàng bị tra cứu
-target_log_id UUID // Bản ghi log cụ thể
-purpose TEXT // Mục đích truy cập
-ticket_id VARCHAR(100) // Mã Ticket hỗ trợ khách hàng
-client_ip VARCHAR(45) // Địa chỉ IP truy cập
-user_agent VARCHAR(255) // Thông tin thiết bị hoặc trình duyệt
-accessed_at TIMESTAMP // Thời điểm truy cập xem log
+    id UUID PK
+    actor_id UUID // Operator hoặc Admin truy cập
+    target_user_id UUID
+    agent_run_id UUID
+    purpose TEXT
+    ticket_id VARCHAR(100)
+    client_ip VARCHAR(45)
+    user_agent VARCHAR(255)
+    accessed_at TIMESTAMP
 }
 
-// Bảng Bộ nhớ Tạm của Agent trong Phiên chạy
-table agent_working_memories {
-id UUID PK // Định danh bộ nhớ tạm
-session_id VARCHAR(100) // Định danh phiên làm việc
-trip_id UUID // Gắn với chuyến đi
-agent_type VARCHAR(30) // Agent sở hữu bộ nhớ
-memory_key VARCHAR(100) // Khóa định danh ngữ cảnh
-memory_value JSONB // Giá trị dữ liệu ngữ cảnh
-expires_at TIMESTAMP // Hạn lưu trữ
-created_at TIMESTAMP // Thời điểm khởi tạo
+
+// Bảng Bộ nhớ Tạm của Agent
+table agent_memories {
+    id UUID PK
+    agent_session_id UUID
+    trip_id UUID
+    agent_type AgentType
+    scope AgentMemoryScope
+    memory_key VARCHAR(100)
+    memory_value JSONB
+    expires_at TIMESTAMP // Working/trip memory lưu tối đa 7 ngày
+    created_at TIMESTAMP
 }
 
-// Bảng Cấu hình Tham số Toàn cục Hệ thống
+
+// Bảng Cấu hình Tham số Toàn cục
 table system_configs {
-    config_key VARCHAR(100) PK // Khóa định danh tham số cấu hình
-    config_value JSONB // Giá trị cấu hình linh hoạt
-    description TEXT // Mô tả ý nghĩa tham số
-    updated_by UUID // Admin cập nhật cấu hình gần nhất
-    updated_at TIMESTAMP // Thời điểm cập nhật
+    config_key VARCHAR(100) PK
+    config_value JSONB
+    description TEXT
+    updated_by UUID
+    updated_at TIMESTAMP
 }
+
