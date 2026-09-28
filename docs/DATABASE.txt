@@ -669,4 +669,3 @@ table system_configs {
     updated_by UUID
     updated_at TIMESTAMP
 }
-
