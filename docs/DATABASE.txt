@@ -1,18 +1,22 @@
 //Enum 
+// Xác định trạng thái hoạt động hoặc bị hạn chế của tài khoản.
 enum AccountStatus {
     DISABLED
     BANNED
     ACTIVE
 }
+// Xác định vai trò và quyền truy cập của tài khoản trong hệ thống.
 enum UserRole {
     USER
     ADMIN
     OPERATOR
 }
+// Xác định phiên làm việc với Agent đang hoạt động hay đã lưu trữ.
 enum AgentSessionStatus {
     ARCHIVED
     ACTIVE
 }
+// Theo dõi trạng thái xử lý của một yêu cầu chuyến đi.
 enum TripRequestStatus {
     DRAFT
     CONFIRMED
@@ -20,21 +24,25 @@ enum TripRequestStatus {
     PLANNED
     CANCELLED
 }
+// Phân loại ảnh theo mục đích sử dụng trong yêu cầu, đánh giá hoặc tổng kết chuyến đi.
 enum MediaImage {
     REQUEST_IMAGE
     REVIEW_PHOTO 
     SUMMARY_PHOTO
 }
+// Theo dõi trạng thái của một phương án lộ trình.
 enum ItineraryStatus {
     DRAFT
     REVIEWING
     SELECTED
 }
+// Theo dõi quyết định của người dùng đối với đề xuất chỉnh sửa lộ trình.
 enum ItineraryProposalStatus {
     pending/accepted/rejected
 }
 
 
+// Lưu tài khoản, thông tin đăng nhập, vai trò và trạng thái của người dùng.
 table users {
     id uuid PK 
     email VARCHAR(100) unique //required
@@ -46,6 +54,7 @@ table users {
     updated_at TIMESTAMP
 }
 
+// Lưu sở thích, nhu cầu đặc biệt và ngân sách mặc định của người dùng.
 table user_profile {
     user_id UUID PK // Khóa chính và ngoại liên kết 1-1 với người dùng
     travel_preferences JSONB // Sở thích và phong cách du lịch
@@ -56,6 +65,7 @@ table user_profile {
     updated_at TIMESTAMP // Thời điểm cập nhật hồ sơ gần nhất
 }
 
+// Lưu từng phiên hội thoại giữa người dùng và Agent.
 table agent_session {
     id uuid PK
     user_id string 
@@ -66,6 +76,7 @@ table agent_session {
     updated_at TIMESTAMP
 }
 
+// Lưu các tin nhắn thuộc một phiên hội thoại với Agent.
 table messages {
     id UUID PK
     agent_session_id UUID
@@ -76,6 +87,7 @@ table messages {
     created_at TIMESTAMP
 }
 
+// Lưu nội dung, phiên bản và trạng thái của yêu cầu chuyến đi.
 table trip_requests {
     id UUID PK  
     parent_trip_request_id UUID // Liên kết phiên bản yêu cầu trước đó
@@ -98,6 +110,7 @@ table trip_requests {
     updated_at TIMESTAMP // Cập nhật gần nhất
 }
 
+// Lưu thông tin tệp media do người dùng tải lên và vị trí tệp trong Object Storage.
 table media_files {
     id UUID PK // Định danh tệp đa phương tiện
     user_id UUID // Người sở hữu tải lên
@@ -110,6 +123,7 @@ table media_files {
     created_at TIMESTAMP // Thời điểm tải lên
 }
 
+// Lưu các danh mục dùng để phân loại địa điểm du lịch.
 table place_categories {
     id SERIAL PK // Mã danh mục tự tăng
     name VARCHAR(100) // Tên phân loại địa điểm
@@ -118,6 +132,7 @@ table place_categories {
     created_at TIMESTAMP 
 }
 
+// Lưu thông tin, vị trí, giá và giờ hoạt động của địa điểm du lịch.
 table places {
     id UUID PK // Định danh địa điểm
     category_id INT // Danh mục phân loại
@@ -141,6 +156,7 @@ table places {
     updated_at TIMESTAMP // Cập nhật gần nhất
 }
 
+// Lưu nội dung văn bản và âm thanh thuyết minh của từng địa điểm.
 table place_narrations {
     id UUID PK // Định danh bài thuyết minh
     place_id UUID // Thuộc địa điểm nào
@@ -152,6 +168,7 @@ table place_narrations {
     created_by UUID // Admin tải lên hoặc cập nhật
     created_at TIMESTAMP // Thời điểm tạo
 }
+// Lưu các địa điểm người dùng chọn hoặc bỏ chọn cho một yêu cầu chuyến đi.
 table trip_request_selected_places {
     id UUID PK // Khóa chính bảng nối
     trip_request_id UUID // Thuộc yêu cầu chuyến đi
@@ -161,6 +178,7 @@ table trip_request_selected_places {
     created_at TIMESTAMP // Thời điểm tương tác
 }
 
+// Lưu các phương án lộ trình, phiên bản, chi phí và trạng thái lựa chọn.
 table itineraries {
     id UUID PK // Định danh lộ trình
     trip_request_id UUID // Yêu cầu chuyến đi gốc
@@ -182,6 +200,7 @@ table itineraries {
     updated_at TIMESTAMP // Cập nhật gần nhất
 }
 
+// Chia một lộ trình thành từng ngày và lưu kế hoạch tổng quát của mỗi ngày.
 table itinerary_days {
     id UUID PK // Định danh ngày
     itinerary_id UUID // Thuộc lộ trình nào
@@ -192,6 +211,7 @@ table itinerary_days {
     estimated_total_cost NUMERIC(15,2) // Dự trù chi phí ngày
 }
 
+// Lưu các hoạt động, địa điểm, thời gian và chi phí trong từng ngày của lộ trình.
 table itinerary_activities {
     id UUID PK // Định danh hoạt động
     itinerary_day_id UUID // Thuộc ngày nào
@@ -207,6 +227,7 @@ table itinerary_activities {
     updated_at TIMESTAMP // Cập nhật gần nhất
 }
 
+// Lưu thông tin di chuyển giữa hai hoạt động trong cùng một ngày.
 table itinerary_transits {
     id UUID PK // Định danh chặng di chuyển
     itinerary_day_id UUID // Thuộc ngày nào
@@ -220,6 +241,7 @@ table itinerary_transits {
 }
 
 // Bảng Đề xuất Chỉnh sửa Kế hoạch & Log Diff
+// Lưu đề xuất thay đổi lộ trình để người dùng xem và chấp nhận hoặc từ chối trước khi áp dụng.
 table itinerary_proposals {
     id UUID PK // Định danh đề xuất
     itinerary_id UUID // Lộ trình đang sửa
@@ -235,6 +257,7 @@ table itinerary_proposals {
 }
 
 // Bảng Biên bản Thẩm định Khả thi từ Critic Agent
+// Lưu kết quả kiểm tra ngân sách, giờ mở cửa, di chuyển và an toàn của lộ trình hoặc đề xuất.
 table evaluation_results {
     id UUID PK // Định danh kết quả đánh giá
     itinerary_id UUID // Lộ trình kiểm tra
@@ -251,6 +274,7 @@ table evaluation_results {
 }
 
 // Bảng Chuyến đi Thực tế
+// Lưu chuyến đi được tạo từ lộ trình đã chốt và trạng thái thực hiện của chuyến đi.
 table trips {
     id UUID PK // Mã định danh chuyến đi
     user_id UUID // Người thực hiện chuyến đi
@@ -265,6 +289,7 @@ table trips {
 }
 
 // Bảng Tọa độ GPS Di chuyển Thực tế
+// Lưu các vị trí GPS được ghi nhận trong quá trình người dùng thực hiện chuyến đi.
 table gps_location_events { 
     id UUID PK // Định danh sự kiện vị trí
     trip_id UUID // Thuộc chuyến đi nào
@@ -276,6 +301,7 @@ table gps_location_events {
 }
 
 // Bảng Cảnh báo Thời gian thực từ Weather Monitor
+// Lưu cảnh báo ảnh hưởng đến chuyến đi và đề xuất thay thế liên quan.
 table trip_alerts {
     id UUID PK // Định danh cảnh báo
     trip_id UUID // Thuộc chuyến đi nào
@@ -293,6 +319,7 @@ table trip_alerts {
 }
 
 // Enum bổ sung cho các luồng nghiệp vụ còn lại
+// Phân loại dịch vụ đối tác được tìm cho lộ trình.
 enum BookingOfferType {
     HOTEL
     FLIGHT
@@ -300,12 +327,14 @@ enum BookingOfferType {
     ACTIVITY
 }
 
+// Xác định mức độ còn hiệu lực của một lựa chọn dịch vụ đối tác.
 enum BookingOfferStatus {
     AVAILABLE
     STALE
     UNAVAILABLE
 }
 
+// Theo dõi trạng thái riêng tư, kiểm duyệt và hiển thị của bài đánh giá.
 enum ReviewStatus {
     PRIVATE
     PENDING
@@ -314,11 +343,13 @@ enum ReviewStatus {
     HIDDEN
 }
 
+// Xác định lượt ghé thăm trong bài đánh giá đã được xác minh hay chưa.
 enum VisitVerificationStatus {
     UNVERIFIED
     VERIFIED
 }
 
+// Phân loại lý do người dùng báo cáo một bài đánh giá.
 enum ReviewReportReason {
     SPAM
     ABUSE
@@ -327,6 +358,7 @@ enum ReviewReportReason {
     OTHER
 }
 
+// Theo dõi trạng thái xử lý báo cáo bài đánh giá.
 enum ReviewReportStatus {
     OPEN
     REVIEWING
@@ -334,6 +366,7 @@ enum ReviewReportStatus {
     REJECTED
 }
 
+// Xác định hành động kiểm duyệt được thực hiện với bài đánh giá.
 enum ModerationAction {
     APPROVE
     REJECT
@@ -341,23 +374,27 @@ enum ModerationAction {
     RESTORE
 }
 
+// Xác định hệ thống, Operator hoặc Admin đã thực hiện kiểm duyệt.
 enum ModeratorType {
     SYSTEM
     OPERATOR
     ADMIN
 }
 
+// Theo dõi bản tổng kết chuyến đi đang là bản nháp hay đã được xác nhận.
 enum TripSummaryStatus {
     DRAFT
     CONFIRMED
 }
 
+// Phân loại địa điểm trong tổng kết là đã đi, đã bỏ qua hoặc phát sinh ngoài kế hoạch.
 enum SummaryPlaceStatus {
     VISITED
     SKIPPED
     UNPLANNED
 }
 
+// Phân loại chi phí thực tế theo từng nhóm chi tiêu của chuyến đi.
 enum ExpenseCategory {
     LODGING
     TRANSPORT
@@ -367,30 +404,35 @@ enum ExpenseCategory {
     OTHER
 }
 
+// Phân loại nội dung kiến nghị do Operator gửi cho Admin.
 enum OperatorProposalType {
     PLACE_UPDATE
     WEATHER_REPORT
     AI_ISSUE
 }
 
+// Theo dõi trạng thái phê duyệt kiến nghị của Operator.
 enum OperatorProposalStatus {
     PENDING
     APPROVED
     REJECTED
 }
 
+// Xác định loại Agent thực hiện một tác vụ.
 enum AgentType {
     PLANNER
     CRITIC
     BOOKING
 }
 
+// Xác định nguồn đã kích hoạt một lần chạy Agent.
 enum AgentRunTrigger {
     USER
     AGENT
     BACKGROUND_JOB
 }
 
+// Theo dõi trạng thái thực thi của một lần chạy Agent.
 enum AgentRunStatus {
     RUNNING
     COMPLETED
@@ -399,17 +441,20 @@ enum AgentRunStatus {
     EXPIRED
 }
 
+// Theo dõi trạng thái thực thi của một lần gọi tool.
 enum ToolCallStatus {
     RUNNING
     SUCCEEDED
     FAILED
 }
 
+// Xác định bộ nhớ tạm thuộc lần làm việc hiện tại hay toàn bộ chuyến đi.
 enum AgentMemoryScope {
     WORKING
     TRIP
 }
 
+// Xác định loại dữ liệu được liên kết với một nguồn thông tin.
 enum SourceEntityType {
     PLACE
     MESSAGE
@@ -423,6 +468,7 @@ enum SourceEntityType {
 
 // Bảng Tra cứu & So sánh Dịch vụ Đối tác
 // Không lưu booking hoặc payment vì hệ thống chỉ chuyển người dùng sang đối tác.
+// Lưu các lựa chọn dịch vụ đối tác để người dùng so sánh và tự hoàn tất giao dịch.
 table booking_offers {
     id UUID PK
     itinerary_id UUID // Lộ trình dùng để tìm dịch vụ
@@ -445,6 +491,7 @@ table booking_offers {
 
 
 // Bảng Đánh giá Địa điểm
+// Lưu điểm số, nhận xét và trạng thái công khai của người dùng về địa điểm.
 table place_reviews {
     id UUID PK
     place_id UUID
@@ -461,6 +508,7 @@ table place_reviews {
 
 
 // Bảng Báo cáo Bài đánh giá Vi phạm
+// Lưu báo cáo vi phạm đối với bài đánh giá và kết quả xử lý báo cáo.
 table review_reports {
     id UUID PK
     review_id UUID
@@ -477,6 +525,7 @@ table review_reports {
 
 // Bảng Lịch sử Kiểm duyệt Đánh giá
 // Giữ bảng riêng để truy vết mọi lần approve/reject/hide/restore.
+// Lưu lịch sử từng hành động kiểm duyệt đã thực hiện với bài đánh giá.
 table review_moderation_logs {
     id UUID PK
     review_id UUID
@@ -493,6 +542,7 @@ table review_moderation_logs {
 
 // Bảng Tổng kết Chuyến đi
 // Các phần cần lọc/tổng hợp được tách thành trip_summary_places và trip_expenses.
+// Lưu bản tổng kết, đánh giá chung và nhật ký cảm nhận của một chuyến đi.
 table trip_summaries {
     id UUID PK
     trip_id UUID
@@ -506,6 +556,7 @@ table trip_summaries {
 
 
 // Bảng Địa điểm Thực tế trong Tổng kết
+// Lưu các địa điểm đã đi, bỏ qua hoặc phát sinh trong bản tổng kết chuyến đi.
 table trip_summary_places {
     id UUID PK
     trip_summary_id UUID
@@ -523,6 +574,7 @@ table trip_summary_places {
 
 // Bảng Chi phí Thực tế
 // Tách khỏi JSONB để tổng hợp theo hạng mục và so sánh với dự trù.
+// Lưu từng khoản chi thực tế để tổng hợp và so sánh với chi phí dự kiến.
 table trip_expenses {
     id UUID PK
     trip_summary_id UUID
@@ -538,6 +590,7 @@ table trip_expenses {
 
 // Bảng Gợi ý Chuyến đi Tiếp theo
 // Giữ bảng riêng để hiển thị lại thẻ gợi ý và theo dõi thẻ đã mở hội thoại mới.
+// Lưu các gợi ý chuyến đi tiếp theo được tạo từ bản tổng kết đã xác nhận.
 table next_trip_suggestions {
     id UUID PK
     trip_summary_id UUID
@@ -554,6 +607,7 @@ table next_trip_suggestions {
 
 
 // Bảng Kiến nghị Maker - Checker
+// Lưu kiến nghị của Operator để Admin xem xét, phê duyệt hoặc từ chối.
 table operator_proposals {
     id UUID PK
     operator_id UUID
@@ -573,6 +627,7 @@ table operator_proposals {
 
 // Bảng Một lần Thực thi Agent
 // Thay cho audit_logs gộp chung; một row chỉ biểu diễn một Agent hoặc job thực thi.
+// Lưu thông tin đầu vào, kết quả, lỗi và thời gian của từng lần chạy Agent.
 table agent_runs {
     id UUID PK
     workflow_id UUID // Nhóm các lần Planner -> Critic -> Planner trong cùng luồng
@@ -599,6 +654,7 @@ table agent_runs {
 
 // Bảng Từng Tool Call của Agent
 // Tách riêng để tra cứu theo tool, trạng thái, lỗi và thứ tự thực thi.
+// Lưu tham số, kết quả và trạng thái của từng lần Agent gọi tool.
 table tool_calls {
     id UUID PK
     agent_run_id UUID
@@ -618,6 +674,7 @@ table tool_calls {
 
 // Bảng Nguồn của Thông tin Biến động
 // Không dùng JSONB vì cần tra cứu theo entity, nguồn, thời điểm và độ tin cậy.
+// Lưu nguồn, thời điểm kiểm tra và độ tin cậy của thông tin có thể thay đổi.
 table information_sources {
     id UUID PK
     entity_type SourceEntityType
@@ -634,6 +691,7 @@ table information_sources {
 
 
 // Bảng Giám sát Truy cập Log Kỹ thuật Khách hàng
+// Lưu lịch sử Operator hoặc Admin truy cập log kỹ thuật của người dùng.
 table audit_access_logs {
     id UUID PK
     actor_id UUID // Operator hoặc Admin truy cập
@@ -648,6 +706,7 @@ table audit_access_logs {
 
 
 // Bảng Bộ nhớ Tạm của Agent
+// Lưu bộ nhớ tạm của Agent trong phiên làm việc hoặc chuyến đi.
 table agent_memories {
     id UUID PK
     agent_session_id UUID
@@ -662,6 +721,7 @@ table agent_memories {
 
 
 // Bảng Cấu hình Tham số Toàn cục
+// Lưu các tham số cấu hình dùng chung và người cập nhật gần nhất.
 table system_configs {
     config_key VARCHAR(100) PK
     config_value JSONB
