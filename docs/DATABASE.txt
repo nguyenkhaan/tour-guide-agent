@@ -24,12 +24,6 @@ enum TripRequestStatus {
     PLANNED
     CANCELLED
 }
-// Phân loại ảnh theo mục đích sử dụng trong yêu cầu, đánh giá hoặc tổng kết chuyến đi.
-enum MediaImage {
-    REQUEST_IMAGE
-    REVIEW_PHOTO 
-    SUMMARY_PHOTO
-}
 // Theo dõi trạng thái của một phương án lộ trình.
 enum ItineraryStatus {
     DRAFT
@@ -38,7 +32,9 @@ enum ItineraryStatus {
 }
 // Theo dõi quyết định của người dùng đối với đề xuất chỉnh sửa lộ trình.
 enum ItineraryProposalStatus {
-    pending/accepted/rejected
+    PENDING 
+    ACCEPTED
+    REJECTED
 }
 
 
@@ -81,20 +77,21 @@ table messages {
     id UUID PK
     agent_session_id UUID
     role VARCHAR(10) //user or assistant
+    sources JSONB
     content TEXT 
     metadata JSONB
     agent_run_id UUID // Liên kết assistant message với lần chạy Agent tạo ra nó
     created_at TIMESTAMP
 }
 
-// Lưu nội dung, phiên bản và trạng thái của yêu cầu chuyến đi.
+// Lưu nội dung, phiên bản và trạng thái của yêu cầu chuyến đi. UI đục lỗ 
 table trip_requests {
     id UUID PK  
     parent_trip_request_id UUID // Liên kết phiên bản yêu cầu trước đó
     user_id uuid 
     agent_session_id uuid
     status TripRequestStatus 
-    version INT
+    version INT 
     origin_name VARCHAR(255) // Tên địa điểm xuất phát
     origin_location GEOMETRY(Point,4326) // Tọa độ điểm xuất phát
     destination_text VARCHAR(500) // Điểm đến hoặc khu vực người dùng mong muốn
@@ -142,15 +139,16 @@ table places {
     address VARCHAR(500) // Địa chỉ thực tế
     location GEOMETRY(Point,4326) // Tọa độ địa lý WGS84
     province VARCHAR(100) // Tỉnh hoặc Thành phố
-    opening_hours JSONB // Giờ mở và đóng cửa
+    start_time timestamp // Giờ mở và đóng cửa
+    end_time timestamp
     min_price NUMERIC(12,2) // Giá vé tối thiểu
     max_price NUMERIC(12,2) // Giá vé tối đa
     currency VARCHAR(3) // Đơn vị tiền tệ
     average_rating FLOAT
     images JSONB  
-    visual_attributes JSONB // Đặc điểm hình ảnh của địa điểm do Vision tool trích xuất
+    visual_attributes JSONB // Đặc điểm hình ảnh của địa điểm do Vision tool trích xuất 
     is_active BOOLEAN
-    created_by UUID // Admin thêm địa điểm
+    created_by UUID // Admin thêm địa điểm 
     updated_by UUID // Admin cập nhật gần nhất
     created_at TIMESTAMP // Thời điểm tạo
     updated_at TIMESTAMP // Cập nhật gần nhất
@@ -205,7 +203,7 @@ table itinerary_days {
     id UUID PK // Định danh ngày
     itinerary_id UUID // Thuộc lộ trình nào
     day_number INT // Ngày thứ mấy trong chuyến đi
-    planned_date DATETIME //Ngay da len ke hoach 
+    created_at timestamp //Ngay da len ke hoach 
     title VARCHAR(255) // Tiêu đề ngày
     description TEXT // Mô tả trải nghiệm chính
     estimated_total_cost NUMERIC(15,2) // Dự trù chi phí ngày
@@ -227,7 +225,7 @@ table itinerary_activities {
     updated_at TIMESTAMP // Cập nhật gần nhất
 }
 
-// Lưu thông tin di chuyển giữa hai hoạt động trong cùng một ngày.
+// Lưu thông tin di chuyển giữa hai hoạt động trong cùng một ngày. A -> C
 table itinerary_transits {
     id UUID PK // Định danh chặng di chuyển
     itinerary_day_id UUID // Thuộc ngày nào
@@ -288,17 +286,7 @@ table trips {
     updated_at TIMESTAMP // Cập nhật gần nhất
 }
 
-// Bảng Tọa độ GPS Di chuyển Thực tế
-// Lưu các vị trí GPS được ghi nhận trong quá trình người dùng thực hiện chuyến đi.
-table gps_location_events { 
-    id UUID PK // Định danh sự kiện vị trí
-    trip_id UUID // Thuộc chuyến đi nào
-    location GEOMETRY(Point,4326) // Tọa độ GPS ghi nhận
-    accuracy_meters NUMERIC(6,2) // Bán kính sai số GPS
-    recorded_at TIMESTAMP // Thời điểm ghi nhận
-    expires_at TIMESTAMP // Hạn lưu trữ tối đa 7 ngày
-    is_expired BOOLEAN // Cờ đánh dấu hết hạn
-}
+// Bảng Tọa độ GPS Di chuyển Thực tế 
 
 // Bảng Cảnh báo Thời gian thực từ Weather Monitor
 // Lưu cảnh báo ảnh hưởng đến chuyến đi và đề xuất thay thế liên quan.
@@ -465,31 +453,6 @@ enum SourceEntityType {
     TRIP_ALERT
 }
 
-
-// Bảng Tra cứu & So sánh Dịch vụ Đối tác
-// Không lưu booking hoặc payment vì hệ thống chỉ chuyển người dùng sang đối tác.
-// Lưu các lựa chọn dịch vụ đối tác để người dùng so sánh và tự hoàn tất giao dịch.
-table booking_offers {
-    id UUID PK
-    itinerary_id UUID // Lộ trình dùng để tìm dịch vụ
-    agent_run_id UUID // Lần chạy Booking Agent tạo offer
-    offer_type BookingOfferType
-    status BookingOfferStatus
-    provider_name VARCHAR(100)
-    provider_offer_id VARCHAR(255)
-    title VARCHAR(255)
-    description TEXT
-    match_score NUMERIC(5,2) // Mức phù hợp với lịch trình và hồ sơ
-    final_price NUMERIC(15,2)
-    currency VARCHAR(3)
-    cancellation_policy TEXT
-    redirect_url VARCHAR(1000)
-    checked_at TIMESTAMP
-    expires_at TIMESTAMP
-    created_at TIMESTAMP
-}
-
-
 // Bảng Đánh giá Địa điểm
 // Lưu điểm số, nhận xét và trạng thái công khai của người dùng về địa điểm.
 table place_reviews {
@@ -499,8 +462,7 @@ table place_reviews {
     trip_id UUID // Chuyến đi dùng để xác minh lượt ghé thăm
     rating INT
     comment TEXT
-    status ReviewStatus // Mặc định PRIVATE; yêu cầu công khai chuyển sang PENDING
-    visit_status VisitVerificationStatus
+    is_valid BOOLEAN //Kiểm duyệt review của người dùng 
     published_at TIMESTAMP
     created_at TIMESTAMP
     updated_at TIMESTAMP
@@ -639,8 +601,6 @@ table agent_runs {
     agent_type AgentType
     trigger_type AgentRunTrigger
     status AgentRunStatus
-    agent_version VARCHAR(50)
-    prompt_version VARCHAR(50)
     input_summary JSONB // Input đã rút gọn và loại bỏ secret
     output_summary JSONB // Output có cấu trúc, không lưu chain-of-thought
     decision_summary TEXT // Lý do quyết định ngắn gọn cho người dùng và vận hành
@@ -658,9 +618,7 @@ table agent_runs {
 table tool_calls {
     id UUID PK
     agent_run_id UUID
-    sequence_number INT
     tool_name VARCHAR(100)
-    tool_version VARCHAR(50)
     arguments JSONB // Schema khác nhau theo từng tool
     result JSONB // Kết quả đã loại bỏ secret và dữ liệu nhạy cảm không cần thiết
     status ToolCallStatus
@@ -675,13 +633,11 @@ table tool_calls {
 // Bảng Nguồn của Thông tin Biến động
 // Không dùng JSONB vì cần tra cứu theo entity, nguồn, thời điểm và độ tin cậy.
 // Lưu nguồn, thời điểm kiểm tra và độ tin cậy của thông tin có thể thay đổi.
-table information_sources {
+table entity_log {
     id UUID PK
     entity_type SourceEntityType
     entity_id UUID // ID của place/message/itinerary/proposal/evaluation/offer/alert
     field_name VARCHAR(100) // Ví dụ: opening_hours, price, weather, travel_time
-    source_name VARCHAR(255)
-    source_url VARCHAR(1000)
     checked_at TIMESTAMP
     confidence NUMERIC(3,2)
     agent_run_id UUID
