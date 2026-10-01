@@ -38,9 +38,6 @@ Nhóm màn hình này hỗ trợ người dùng tìm kiếm các dịch vụ lư
 | |                                                                               | |
 | | [ ĐẶT PHÒNG TRÊN BOOKING.COM (Mở tab mới) >> ] [ So sánh giá với các bên khác v]|
 | +-------------------------------------------------------------------------------+ |
-|                                                                                   |
-| (i) Bạn sẽ được chuyển hướng trực tiếp sang trang chính thức của nhà cung cấp     |
-|     để hoàn tất đặt chỗ và thanh toán. Ứng dụng không thu tiền hay giữ tiền.     |
 +-----------------------------------------------------------------------------------+
 ```
 
