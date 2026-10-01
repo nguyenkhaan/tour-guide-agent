@@ -122,10 +122,12 @@ Nhóm màn hình này xử lý các tình huống bất ngờ phát sinh trong c
 
 ### 4.1. Màn Hình SCR-21: Tổng Kết Điểm Đến Thực Tế (Places Visited Summary)
 - **Bảng `trip_summary_places`**:
-  - Trạng thái phân loại điểm $\rightarrow$ `trip_summary_places.status` (`VISITED`, `SKIPPED`, `UNPLANNED`)
-  - Bằng chứng phân loại $\rightarrow$ `trip_summary_places.evidence` (GPS, tương tác)
-  - Độ tin cậy $\rightarrow$ `trip_summary_places.confidence`
-  - Cờ người dùng chỉnh sửa $\rightarrow$ `trip_summary_places.is_user_corrected` (BOOLEAN)
+  - Địa điểm trong tổng kết $\rightarrow$ `trip_summary_places.place_id` (nếu có trong kho địa điểm) hoặc `trip_summary_places.place_name` (lưu tên trực tiếp nếu là điểm dừng chân phát sinh tự do ngoài danh mục).
+  - Trạng thái phân loại điểm $\rightarrow$ `trip_summary_places.status` (`VISITED` - đã đi, `SKIPPED` - đã bỏ qua, `UNPLANNED` - phát sinh ngoài kế hoạch ban đầu)
+  - Bằng chứng phân loại tự động $\rightarrow$ `trip_summary_places.evidence` (Dữ liệu tọa độ GPS, thời gian dừng, tương tác chat)
+  - Độ tin cậy nhận diện $\rightarrow$ `trip_summary_places.confidence`
+  - Cờ đánh dấu người dùng đã tự tay đính chính $\rightarrow$ `trip_summary_places.is_user_corrected` (BOOLEAN)
+  - Ghi chú riêng cho điểm đến $\rightarrow$ `trip_summary_places.notes`
 
 ### 4.2. Màn Hình SCR-22: Báo Cáo Chi Phí & Nhật Ký Kỷ Niệm (Trip Expenses & Diary)
 - **Bảng `trip_expenses`**:

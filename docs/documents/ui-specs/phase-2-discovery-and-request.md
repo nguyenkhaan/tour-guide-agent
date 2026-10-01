@@ -103,7 +103,8 @@ Nhóm màn hình này là nơi người dùng trò chuyện tự nhiên với AI
   - Tổng ngân sách & Tiền tệ $\rightarrow$ `trip_requests.budget`, `trip_requests.currency`
   - Thành viên đi cùng $\rightarrow$ `trip_requests.companions_count`, `trip_requests.companions_info` (JSONB)
   - Sở thích riêng $\rightarrow$ `trip_requests.preferences` (JSONB)
-  - Số phiên bản & Trạng thái $\rightarrow$ `trip_requests.version`, `trip_requests.status` (`DRAFT` $\rightarrow$ `CONFIRMED`)
+  - Số phiên bản & Trạng thái $\rightarrow$ `trip_requests.version`, `trip_requests.status` (`DRAFT` khi tạo nháp $\rightarrow$ `CONFIRMED` khi người dùng bấm xác nhận tóm tắt $\rightarrow$ `PLANNING` khi AI thực thi $\rightarrow$ `PLANNED` khi hoàn tất đề xuất $\rightarrow$ `CANCELLED` nếu hủy)
+  - Thời điểm xác nhận $\rightarrow$ `trip_requests.confirmed_at`
 - **Bảng `trip_request_selected_places`**:
   - Danh sách địa điểm đã chọn trước $\rightarrow$ `trip_request_selected_places.place_id`, `selection_status`, `selection_reason`
 

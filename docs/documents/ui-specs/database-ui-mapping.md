@@ -8,35 +8,35 @@ Tài liệu này đối chiếu **100% các thành phần thị giác trên các
 
 | Mã Màn Hình | Tên Màn Hình / Chức Năng | Bảng Dữ Liệu Chính (Primary Tables) | Bảng Liên Quan & Enums |
 | :--- | :--- | :--- | :--- |
-| **SCR-01** | Đăng nhập & Đăng ký | `users` | `AccountStatus` (`ACTIVE`, `BANNED`, `DISABLED`), `UserRole` |
+| **SCR-01** | Đăng nhập & Đăng ký | `users` | `AccountStatus` (`ACTIVE`, `BANNED`, `DISABLED`), `UserRole` (`USER`, `OPERATOR`, `ADMIN`) |
 | **SCR-02** | Khung App Shell & Lịch sử | `agent_session`, `trips`, `trip_requests` | `AgentSessionStatus` (`ACTIVE`, `ARCHIVED`), `UserRole` |
-| **SCR-03** | Hồ sơ du lịch cá nhân | `user_profile`, `agent_memories` | `travel_preferences`, `special_needs`, `default_budget` |
-| **SCR-04** | Hội thoại lập kế hoạch AI | `messages`, `agent_session`, `media_files` | `agent_runs`, `MediaImage.REQUEST_IMAGE` |
-| **SCR-05** | Bản tóm tắt yêu cầu chuyến đi | `trip_requests`, `trip_request_selected_places` | `TripRequestStatus` (`DRAFT`, `CONFIRMED`), `version` |
-| **SCR-06** | Khám phá địa điểm (Danh sách & Map) | `places`, `place_categories`, `media_files` | `location` (PostGIS Point 4326), `visual_attributes` |
-| **SCR-07** | Chi tiết địa điểm & Căn cứ đề xuất | `places`, `information_sources`, `place_reviews` | `source_name`, `confidence`, `checked_at`, `ReviewStatus.PUBLIC` |
-| **SCR-08** | Tiến trình thực thi Đa tác nhân | `agent_runs`, `evaluation_results` | `AgentType` (`PLANNER`, `CRITIC`), `AgentRunStatus` |
-| **SCR-09** | So sánh các phương án AI đề xuất | `itineraries`, `evaluation_results`, `information_sources` | `ItineraryStatus.DRAFT`, `trade_offs` |
-| **SCR-09B**| **Danh sách & Thư viện lịch trình đã lưu** | `itineraries`, `trips`, `trip_requests` | `ItineraryStatus` (`DRAFT`, `SELECTED`), `trips.finalized_itinerary_id` |
-| **SCR-10** | Chi tiết lịch trình & Bàn làm việc Timeline | `itineraries`, `itinerary_days`, `itinerary_activities`, `itinerary_transits` | `activity_type` (`lodging`, `activity`...), `transport_mode` |
-| **SCR-11** | Bảng xem trước đề xuất thay đổi (Diff) | `itinerary_proposals`, `evaluation_results` | `ItineraryProposalStatus` (`pending`, `accepted`, `rejected`) |
-| **SCR-12** | Gợi ý dịch vụ & Chuyển hướng trực tiếp | `booking_offers`, `information_sources` | `BookingOfferType`, `BookingOfferStatus`, `redirect_url` |
-| **SCR-14** | Bảng điều khiển chuyến đi đang chạy | `trips`, `gps_location_events`, `itineraries` | `gps_consent`, `actual_start_date`, `is_expired` (7 ngày) |
-| **SCR-15** | Hỏi đáp tại chỗ & Nhận diện ảnh | `messages`, `places`, `information_sources` | `visual_attributes`, `confidence`, `MediaImage.REQUEST_IMAGE` |
-| **SCR-16** | Trình phát thuyết minh Audio Guide | `place_narrations`, `gps_location_events` | `audio_object_key`, `transcript`, `duration_seconds` |
-| **SCR-17** | Cảnh báo thời tiết & Đề xuất đổi lịch | `trip_alerts`, `itinerary_proposals`, `information_sources` | `severity`, `confidence`, `affected_activity_id` |
-| **SCR-18** | Soạn thảo đánh giá cá nhân | `place_reviews`, `media_files` | `ReviewStatus` (`PRIVATE`, `PENDING`), `MediaImage.REVIEW_PHOTO` |
-| **SCR-19** | Xem đánh giá cộng đồng & Báo cáo | `place_reviews`, `review_reports` | `ReviewStatus.PUBLIC`, `ReviewReportReason` (`SPAM`, `ABUSE`...) |
-| **SCR-20** | Bảng kiểm duyệt đánh giá (Operator/Admin) | `place_reviews`, `review_reports`, `review_moderation_logs` | `ModerationAction` (`APPROVE`, `REJECT`, `HIDE`, `RESTORE`) |
-| **SCR-21** | Tổng kết điểm đến thực tế | `trip_summaries`, `trip_summary_places` | `SummaryPlaceStatus` (`VISITED`, `SKIPPED`, `UNPLANNED`), `is_user_corrected` |
-| **SCR-22** | Báo cáo chi phí thực tế & Nhật ký | `trip_summaries`, `trip_expenses`, `media_files` | `ExpenseCategory` (`LODGING`, `TRANSPORT`, `FOOD`, `TICKET`, `SHOPPING`, `OTHER`) |
-| **SCR-23** | Chốt tổng kết & Gợi ý chuyến tiếp theo | `trip_summaries`, `next_trip_suggestions`, `user_profile` | `TripSummaryStatus.CONFIRMED`, `rank` (1..3), `estimated_budget` |
-| **SCR-24** | Tra cứu nhật ký kỹ thuật & sự cố | `agent_runs`, `trips` | `AgentRunStatus`, `error_code`, `expires_at` (7 ngày) |
-| **SCR-25** | Cửa sổ Ticket ID & Chi tiết Trace | `audit_access_logs`, `agent_runs`, `tool_calls` | `ticket_id`, `purpose`, `ToolCallStatus`, `decision_summary` |
-| **SCR-26** | Quản trị kho địa điểm & Audio Guide | `places`, `place_categories`, `place_narrations` | `is_active`, `opening_hours`, `location` (Point 4326) |
-| **SCR-27** | Bảng kiến nghị Maker–Checker | `operator_proposals`, `places` | `OperatorProposalType`, `OperatorProposalStatus` (`PENDING`, `APPROVED`, `REJECTED`) |
-| **SCR-28** | Quản trị người dùng & Phân quyền | `users` | `AccountStatus` (`ACTIVE`, `BANNED`), `UserRole` (`USER`, `OPERATOR`, `ADMIN`) |
-| **SCR-29** | Cấu hình tham số hệ thống động | `system_configs` | `config_key`, `config_value` (chu kỳ weather, retention days) |
+| **SCR-03** | Hồ sơ du lịch cá nhân | `user_profile`, `agent_memories` | `travel_preferences`, `special_needs`, `default_budget`, `AgentMemoryScope` (`WORKING`, `TRIP`) |
+| **SCR-04** | Hội thoại lập kế hoạch AI | `messages`, `agent_session`, `media_files` | `agent_runs`, `MediaImage.REQUEST_IMAGE`, `AgentSessionStatus.ACTIVE` |
+| **SCR-05** | Bản tóm tắt yêu cầu chuyến đi | `trip_requests`, `trip_request_selected_places` | `TripRequestStatus` (`DRAFT`, `CONFIRMED`, `PLANNING`, `PLANNED`, `CANCELLED`), `version` |
+| **SCR-06** | Khám phá địa điểm (Danh sách & Map) | `places`, `place_categories`, `media_files` | `location` (PostGIS Point 4326), `visual_attributes`, `is_active` |
+| **SCR-07** | Chi tiết địa điểm & Căn cứ đề xuất | `places`, `information_sources`, `place_reviews` | `source_name`, `confidence`, `checked_at`, `SourceEntityType.PLACE`, `ReviewStatus.PUBLIC` |
+| **SCR-08** | Tiến trình thực thi Đa tác nhân | `agent_runs`, `evaluation_results` | `AgentType` (`PLANNER`, `CRITIC`), `AgentRunStatus` (`RUNNING`, `COMPLETED`, `FAILED`, `CANCELLED`), `TripRequestStatus.PLANNING` |
+| **SCR-09** | So sánh các phương án AI đề xuất | `itineraries`, `evaluation_results`, `information_sources` | `ItineraryStatus` (`DRAFT`, `REVIEWING`), `trade_offs`, `cost_breakdown`, `highlights`, `warnings` |
+| **SCR-09B**| **Danh sách & Thư viện lịch trình đã lưu** | `itineraries`, `trips`, `trip_requests` | `ItineraryStatus` (`DRAFT`, `SELECTED`), `trips.finalized_itinerary_id`, `TripRequestStatus.PLANNED` |
+| **SCR-10** | Chi tiết lịch trình & Bàn làm việc Timeline | `itineraries`, `itinerary_days`, `itinerary_activities`, `itinerary_transits` | `luggage_checklist` (JSONB), `activity_type`, `transport_mode`, `planned_date` |
+| **SCR-11** | Bảng xem trước đề xuất thay đổi (Diff) | `itinerary_proposals`, `evaluation_results` | `ItineraryProposalStatus` (`pending`, `accepted`, `rejected`), `diff_payload`, `rationale` |
+| **SCR-12** | Gợi ý dịch vụ & Chuyển hướng trực tiếp | `booking_offers`, `information_sources` | `BookingOfferType` (`HOTEL`, `FLIGHT`, `TRANSPORT`, `ACTIVITY`), `BookingOfferStatus` (`AVAILABLE`, `STALE`, `UNAVAILABLE`), `redirect_url` |
+| **SCR-14** | Bảng điều khiển chuyến đi đang chạy | `trips`, `gps_location_events`, `itineraries` | `gps_consent`, `actual_start_date`, `is_expired` (7 ngày), `expires_at` |
+| **SCR-15** | Hỏi đáp tại chỗ & Nhận diện ảnh | `messages`, `places`, `information_sources` | `visual_attributes`, `confidence`, `MediaImage.REQUEST_IMAGE`, `SourceEntityType.MESSAGE` |
+| **SCR-16** | Trình phát thuyết minh Audio Guide | `place_narrations`, `gps_location_events` | `audio_object_key`, `transcript`, `duration_seconds`, `is_active` |
+| **SCR-17** | Cảnh báo thời tiết & Đề xuất đổi lịch | `trip_alerts`, `itinerary_proposals`, `information_sources` | `severity`, `confidence`, `affected_activity_id`, `alternative_proposal_id`, `SourceEntityType.TRIP_ALERT` |
+| **SCR-18** | Soạn thảo đánh giá cá nhân | `place_reviews`, `media_files` | `ReviewStatus` (`PRIVATE`, `PENDING`), `VisitVerificationStatus` (`UNVERIFIED`, `VERIFIED`), `MediaImage.REVIEW_PHOTO` |
+| **SCR-19** | Xem đánh giá cộng đồng & Báo cáo | `place_reviews`, `review_reports` | `ReviewStatus.PUBLIC`, `ReviewReportReason` (`SPAM`, `ABUSE`, `IRRELEVANT`, `FALSE_INFORMATION`, `OTHER`), `ReviewReportStatus` (`OPEN`, `REVIEWING`) |
+| **SCR-20** | Bảng kiểm duyệt đánh giá (Operator/Admin) | `place_reviews`, `review_reports`, `review_moderation_logs` | `ModerationAction` (`APPROVE`, `REJECT`, `HIDE`, `RESTORE`), `ModeratorType` (`SYSTEM`, `OPERATOR`, `ADMIN`) |
+| **SCR-21** | Tổng kết điểm đến thực tế | `trip_summaries`, `trip_summary_places` | `SummaryPlaceStatus` (`VISITED`, `SKIPPED`, `UNPLANNED`), `is_user_corrected`, `evidence` (GPS/tương tác) |
+| **SCR-22** | Báo cáo chi phí thực tế & Nhật ký | `trip_summaries`, `trip_expenses`, `media_files` | `ExpenseCategory` (`LODGING`, `TRANSPORT`, `FOOD`, `TICKET`, `SHOPPING`, `OTHER`), `MediaImage.SUMMARY_PHOTO` |
+| **SCR-23** | Chốt tổng kết & Gợi ý chuyến tiếp theo | `trip_summaries`, `next_trip_suggestions`, `user_profile` | `TripSummaryStatus.CONFIRMED`, `rank` (1..3), `estimated_budget`, `started_agent_session_id` |
+| **SCR-24** | Tra cứu nhật ký kỹ thuật & sự cố | `agent_runs`, `trips` | `AgentRunStatus` (`RUNNING`, `COMPLETED`, `FAILED`, `CANCELLED`, `EXPIRED`), `error_code`, `expires_at` (7 ngày) |
+| **SCR-25** | Cửa sổ Ticket ID & Chi tiết Trace | `audit_access_logs`, `agent_runs`, `tool_calls` | `ticket_id`, `purpose`, `ToolCallStatus` (`RUNNING`, `SUCCEEDED`, `FAILED`), `decision_summary` |
+| **SCR-26** | Quản trị kho địa điểm & Toàn diện Dịch vụ | `places`, `place_categories`, `place_narrations`, `booking_offers` | `is_active`, `opening_hours`, `location` (Point 4326), `visual_attributes`, `BookingOfferType` |
+| **SCR-27** | Bảng kiến nghị Maker–Checker | `operator_proposals`, `places` | `OperatorProposalType` (`PLACE_UPDATE`, `WEATHER_REPORT`, `AI_ISSUE`), `OperatorProposalStatus` (`PENDING`, `APPROVED`, `REJECTED`) |
+| **SCR-28** | Quản trị người dùng & Phân quyền | `users` | `AccountStatus` (`ACTIVE`, `BANNED`, `DISABLED`), `UserRole` (`USER`, `OPERATOR`, `ADMIN`) |
+| **SCR-29** | Cấu hình tham số hệ thống động | `system_configs` | `config_key`, `config_value` (JSONB) |
 
 ---
 
