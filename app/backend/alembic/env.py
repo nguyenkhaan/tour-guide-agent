@@ -9,8 +9,12 @@ from src.api.settings.config import DATABASE_URL
 from alembic import context
 from src.models.base_model import Base
 from geoalchemy2 import alembic_helpers
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+
+# Import ALL models so Alembic autogenerate can detect the full schema.
+# This must happen before target_metadata is set.
+import src.models  # noqa: F401 — side-effect import registers all models with Base.metadata
+
+
 config = context.config
 
 # Interpret the config file for Python logging.
