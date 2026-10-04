@@ -2,12 +2,12 @@ name: cloudian
 
 services:
   postgres:
-    image: postgres:17-alpine
+    image: postgis/postgis:17-3.5
     restart: unless-stopped
     environment:
-      POSTGRES_DB: cloudian
-      POSTGRES_USER: cloudian
-      POSTGRES_PASSWORD: cloudian
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     ports:
       - "5432:5432"
     volumes:
@@ -31,8 +31,8 @@ services:
     image: rabbitmq:management-alpine
     restart: unless-stopped
     environment:
-      RABBITMQ_DEFAULT_USER: cloudian
-      RABBITMQ_DEFAULT_PASS: cloudian
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:?Set RABBITMQ_DEFAULT_USER in .env}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?Set RABBITMQ_DEFAULT_PASS in .env}
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -42,8 +42,8 @@ services:
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER in .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in .env}
     ports:
       - "9000:9000"
       - "9001:9001"
