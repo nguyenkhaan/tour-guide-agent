@@ -21,7 +21,7 @@ class ToolCalls(Base):
     arguments: Mapped[Any | None] = mapped_column(JSONB, nullable=True)
     # Kết quả đã loại bỏ secret và dữ liệu nhạy cảm không cần thiết
     result: Mapped[Any | None] = mapped_column(JSONB, nullable=True)
-    status: Mapped[str | None] = mapped_column(ToolCallStatus, nullable=True)
+    status: Mapped[ToolCallStatus | None] = mapped_column(nullable=True)
     error_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

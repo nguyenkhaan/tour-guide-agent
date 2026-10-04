@@ -42,7 +42,7 @@ class TripRequests(Base):
     parent_trip_request_id: Mapped[UUIDValue | None] = mapped_column(UUID(as_uuid=True), ForeignKey("trip_requests.id"), index=True, nullable=True)
     user_id: Mapped[UUIDValue | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), index=True, nullable=True)
     agent_session_id: Mapped[UUIDValue | None] = mapped_column(UUID(as_uuid=True), ForeignKey("agent_session.id"), index=True, nullable=True)
-    status: Mapped[str | None] = mapped_column(TripRequestStatus, nullable=True)
+    status: Mapped[TripRequestStatus | None] = mapped_column(nullable=True)
     version: Mapped[int | None] = mapped_column(Integer, nullable=True)
     # Tên địa điểm xuất phát
     origin_name: Mapped[str | None] = mapped_column(String(255), nullable=True)

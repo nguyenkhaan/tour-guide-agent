@@ -4,6 +4,7 @@ import asyncio
 from collections import Counter
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
+from enum import Enum
 from io import StringIO
 from pathlib import Path
 import re
@@ -16,6 +17,7 @@ from alembic import command
 from alembic.config import Config
 from geoalchemy2 import Geometry
 import sqlalchemy as sa
+from pydantic import TypeAdapter
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import configure_mappers
@@ -172,16 +174,38 @@ class ModelChecks(unittest.TestCase):
                     elif upper == "BOOLEAN": self.assertIsInstance(type_, sa.Boolean)
                     elif kind == "TEXT": self.assertIsInstance(type_, sa.Text)
                     elif kind == "string": self.assertIsInstance(type_, sa.String)
-                    else: self.assertIs(type_, getattr(base_model, kind))
+                    else:
+                        enum_class = getattr(base_model, kind)
+                        self.assertIsInstance(type_, sa.Enum)
+                        self.assertIs(type_.enum_class, enum_class)
 
-    def test_enums_are_shared_types_without_enum_classes(self):
+    def test_enums_are_shared_str_types_for_orm_and_pydantic(self):
         tree = ast.parse((ROOT / "src/models/base_model.py").read_text(encoding="utf-8"))
-        self.assertEqual([node.name for node in tree.body if isinstance(node, ast.ClassDef)], ["Base"])
+        class_names = {node.name for node in tree.body if isinstance(node, ast.ClassDef)}
+        enum_classes = {
+            name: value for name, value in vars(base_model).items()
+            if isinstance(value, type) and value is not Enum and issubclass(value, Enum)
+        }
+        self.assertEqual(class_names, {"Base", *enum_classes})
+
+        for enum_class in enum_classes.values():
+            self.assertTrue(issubclass(enum_class, str))
+            self.assertTrue(issubclass(enum_class, Enum))
+            values = [member.value for member in enum_class]
+
+            database_type = Base.registry.type_annotation_map[enum_class]
+            self.assertIsInstance(database_type, postgresql.ENUM)
+            self.assertEqual(database_type.enums, values)
+            self.assertTrue(database_type.validate_strings)
+
+            adapter = TypeAdapter(enum_class)
+            self.assertIs(adapter.validate_python(values[0]), enum_class(values[0]))
+            self.assertEqual(adapter.dump_json(enum_class(values[0])), f'"{values[0]}"'.encode())
+
         for name, body in re.findall(r"enum\s+(\w+)\s*\{([^}]+)\}", SOURCE):
-            enum = getattr(base_model, name)
-            self.assertIsInstance(enum, postgresql.ENUM)
-            self.assertEqual(enum.enums, re.findall(r"\b[A-Z][A-Z_]*\b", body))
-            self.assertTrue(enum.validate_strings)
+            values = re.findall(r"\b[A-Z][A-Z_]*\b", body)
+            enum_class = getattr(base_model, name)
+            self.assertEqual([member.value for member in enum_class], values)
 
     def test_foreign_keys_indexes_and_shared_conventions(self):
         self.assertEqual(next(iter(UserProfile.__table__.c.user_id.foreign_keys)).target_fullname, "users.id")
@@ -210,7 +234,10 @@ class ModelChecks(unittest.TestCase):
             self.assertIn(f"CREATE TABLE {table} (", sql)
         self.assertIn("CREATE EXTENSION IF NOT EXISTS postgis", sql)
         self.assertIn("USING location::geometry", sql)
-        enum_count = sum(isinstance(value, postgresql.ENUM) for value in vars(base_model).values())
+        enum_count = sum(
+            isinstance(type_, postgresql.ENUM)
+            for type_ in Base.registry.type_annotation_map.values()
+        )
         self.assertEqual(sql.count("CREATE TYPE "), enum_count)
         self.assertNotIn("DROP TABLE todo", sql)
         buffer.seek(0)

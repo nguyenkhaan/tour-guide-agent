@@ -27,7 +27,7 @@ class TripSummaryPlaces(Base):
     place_id: Mapped[UUIDValue | None] = mapped_column(UUID(as_uuid=True), ForeignKey("places.id"), index=True, nullable=True)
     # Tên địa điểm, dùng khi place_id là null
     place_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    status: Mapped[str | None] = mapped_column(SummaryPlaceStatus, nullable=True)
+    status: Mapped[SummaryPlaceStatus | None] = mapped_column(nullable=True)
     # Độ tin cậy khi hệ thống tự phân loại
     confidence: Mapped[Decimal | None] = mapped_column(Numeric(3,2), nullable=True)
     # GPS, tương tác hoặc xác nhận dùng để phân loại

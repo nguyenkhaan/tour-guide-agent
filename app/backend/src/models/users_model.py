@@ -22,7 +22,7 @@ class Users(Base):
 
     password: Mapped[str | None] = mapped_column(String(200), nullable=True)
     full_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    status: Mapped[str | None] = mapped_column(AccountStatus, nullable=True)
-    role: Mapped[str | None] = mapped_column(UserRole, nullable=True)
+    status: Mapped[AccountStatus | None] = mapped_column(nullable=True)
+    role: Mapped[UserRole | None] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = created_timestamp()
     updated_at: Mapped[datetime] = updated_timestamp()

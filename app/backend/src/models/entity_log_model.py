@@ -15,7 +15,7 @@ class EntityLog(Base):
     )
 
     id: Mapped[UUIDValue] = uuid_primary_key()
-    entity_type: Mapped[str | None] = mapped_column(SourceEntityType, nullable=True)
+    entity_type: Mapped[SourceEntityType | None] = mapped_column(nullable=True)
     # ID của place/message/itinerary/proposal/evaluation/offer/alert
     entity_id: Mapped[UUIDValue | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     # Ví dụ: opening_hours, price, weather, travel_time

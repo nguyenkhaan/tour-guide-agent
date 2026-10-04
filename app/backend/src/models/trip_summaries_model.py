@@ -20,7 +20,7 @@ class TripSummaries(Base):
 
     id: Mapped[UUIDValue] = uuid_primary_key()
     trip_id: Mapped[UUIDValue | None] = mapped_column(UUID(as_uuid=True), ForeignKey("trips.id"), index=True, nullable=True)
-    status: Mapped[str | None] = mapped_column(TripSummaryStatus, nullable=True)
+    status: Mapped[TripSummaryStatus | None] = mapped_column(nullable=True)
     overall_rating: Mapped[int | None] = mapped_column(Integer, nullable=True)
     diary_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

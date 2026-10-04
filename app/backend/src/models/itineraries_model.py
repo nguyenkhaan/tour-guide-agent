@@ -56,7 +56,7 @@ class Itineraries(Base):
     # Điểm xếp hạng đề xuất
     ranking_score: Mapped[Decimal | None] = mapped_column(Numeric(5,2), nullable=True)
     # Trạng thái vòng đời lộ trình
-    status: Mapped[str | None] = mapped_column(ItineraryStatus, nullable=True)
+    status: Mapped[ItineraryStatus | None] = mapped_column(nullable=True)
     # Thời điểm tạo
     created_at: Mapped[datetime] = created_timestamp()
     # Cập nhật gần nhất

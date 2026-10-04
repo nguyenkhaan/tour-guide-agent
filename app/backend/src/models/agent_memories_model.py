@@ -17,8 +17,8 @@ class AgentMemories(Base):
     id: Mapped[UUIDValue] = uuid_primary_key()
     agent_session_id: Mapped[UUIDValue | None] = mapped_column(UUID(as_uuid=True), ForeignKey("agent_session.id"), index=True, nullable=True)
     trip_id: Mapped[UUIDValue | None] = mapped_column(UUID(as_uuid=True), ForeignKey("trips.id"), index=True, nullable=True)
-    agent_type: Mapped[str | None] = mapped_column(AgentType, nullable=True)
-    scope: Mapped[str | None] = mapped_column(AgentMemoryScope, nullable=True)
+    agent_type: Mapped[AgentType | None] = mapped_column(nullable=True)
+    scope: Mapped[AgentMemoryScope | None] = mapped_column(nullable=True)
     memory_key: Mapped[str | None] = mapped_column(String(100), nullable=True)
     memory_value: Mapped[Any | None] = mapped_column(JSONB, nullable=True)
     # Working/trip memory lưu tối đa 7 ngày

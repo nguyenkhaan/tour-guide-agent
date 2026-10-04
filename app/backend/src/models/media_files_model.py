@@ -28,6 +28,6 @@ class MediaFiles(Base):
     mime_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
     # Muc dich cua media
 
-    purpose: Mapped[str | None] = mapped_column(MediaImage, nullable=True)
+    purpose: Mapped[MediaImage | None] = mapped_column(nullable=True)
     # Thời điểm tải lên
     created_at: Mapped[datetime] = created_timestamp()

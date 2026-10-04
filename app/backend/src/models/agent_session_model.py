@@ -24,6 +24,6 @@ class AgentSession(Base):
     # A short summary about agent's session
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     title: Mapped[str | None] = mapped_column(String, nullable=True)
-    status: Mapped[str | None] = mapped_column(AgentSessionStatus, nullable=True)
+    status: Mapped[AgentSessionStatus | None] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = created_timestamp()
     updated_at: Mapped[datetime] = updated_timestamp()

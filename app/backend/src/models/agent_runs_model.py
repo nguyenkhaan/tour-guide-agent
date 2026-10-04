@@ -24,9 +24,9 @@ class AgentRuns(Base):
     agent_session_id: Mapped[UUIDValue | None] = mapped_column(UUID(as_uuid=True), ForeignKey("agent_session.id"), index=True, nullable=True)
     trip_request_id: Mapped[UUIDValue | None] = mapped_column(UUID(as_uuid=True), ForeignKey("trip_requests.id"), index=True, nullable=True)
     trip_id: Mapped[UUIDValue | None] = mapped_column(UUID(as_uuid=True), ForeignKey("trips.id"), index=True, nullable=True)
-    agent_type: Mapped[str | None] = mapped_column(AgentType, nullable=True)
-    trigger_type: Mapped[str | None] = mapped_column(AgentRunTrigger, nullable=True)
-    status: Mapped[str | None] = mapped_column(AgentRunStatus, nullable=True)
+    agent_type: Mapped[AgentType | None] = mapped_column(nullable=True)
+    trigger_type: Mapped[AgentRunTrigger | None] = mapped_column(nullable=True)
+    status: Mapped[AgentRunStatus | None] = mapped_column(nullable=True)
     # Input đã rút gọn và loại bỏ secret
     input_summary: Mapped[Any | None] = mapped_column(JSONB, nullable=True)
     # Output có cấu trúc, không lưu chain-of-thought

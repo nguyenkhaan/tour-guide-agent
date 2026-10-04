@@ -22,7 +22,7 @@ class TripExpenses(Base):
 
     id: Mapped[UUIDValue] = uuid_primary_key()
     trip_summary_id: Mapped[UUIDValue | None] = mapped_column(UUID(as_uuid=True), ForeignKey("trip_summaries.id"), index=True, nullable=True)
-    category: Mapped[str | None] = mapped_column(ExpenseCategory, nullable=True)
+    category: Mapped[ExpenseCategory | None] = mapped_column(nullable=True)
     amount: Mapped[Decimal | None] = mapped_column(Numeric(15,2), nullable=True)
     currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
     spent_on: Mapped[date | None] = mapped_column(Date, nullable=True)

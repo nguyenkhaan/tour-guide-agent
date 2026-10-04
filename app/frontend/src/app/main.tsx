@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App";
-import "../shared/styles/global.css";
+import App from "@/app/App";
+import "@/shared/styles/global.css";
 
 const root = document.getElementById("root");
 

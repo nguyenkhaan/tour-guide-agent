@@ -19,7 +19,7 @@ class OperatorProposals(Base):
 
     id: Mapped[UUIDValue] = uuid_primary_key()
     operator_id: Mapped[UUIDValue | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), index=True, nullable=True)
-    proposal_type: Mapped[str | None] = mapped_column(OperatorProposalType, nullable=True)
+    proposal_type: Mapped[OperatorProposalType | None] = mapped_column(nullable=True)
     # Chỉ có khi kiến nghị cập nhật địa điểm
     target_place_id: Mapped[UUIDValue | None] = mapped_column(UUID(as_uuid=True), ForeignKey("places.id"), index=True, nullable=True)
     # Có thể có khi báo cáo thời tiết hoặc logic AI
@@ -28,7 +28,7 @@ class OperatorProposals(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     # Nội dung thay đổi khác nhau theo proposal_type
     proposed_payload: Mapped[Any | None] = mapped_column(JSONB, nullable=True)
-    status: Mapped[str | None] = mapped_column(OperatorProposalStatus, nullable=True)
+    status: Mapped[OperatorProposalStatus | None] = mapped_column(nullable=True)
     admin_id: Mapped[UUIDValue | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), index=True, nullable=True)
     admin_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = created_timestamp()

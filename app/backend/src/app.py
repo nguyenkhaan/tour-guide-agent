@@ -29,6 +29,8 @@ app = FastAPI(lifespan=lifespan)
 api_router = APIRouter(
     prefix = "/api"
 )
+# API include 
+from src.modules.admin.admin_route import admin_router
 api_router.include_router(health_router) 
-
+api_router.include_router(admin_router) 
 app.include_router(api_router)

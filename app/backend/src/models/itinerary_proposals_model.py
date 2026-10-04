@@ -31,7 +31,7 @@ class ItineraryProposals(Base):
     # Cảnh báo phát sinh
     warnings: Mapped[Any | None] = mapped_column(JSONB, nullable=True)
     # Trạng thái phê duyệt
-    status: Mapped[str | None] = mapped_column(ItineraryProposalStatus, nullable=True)
+    status: Mapped[ItineraryProposalStatus | None] = mapped_column(nullable=True)
     # Thời điểm người dùng duyệt
     user_decision_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     # Thời điểm tạo đề xuất
