@@ -1,5 +1,5 @@
-import { AccountStatus, UserRole, type AdminUser, type AdminUserAction } from '@/features/admin-users/admin-users.types';
-import { RoleBadge, StatusBadge } from '@/features/admin-users/components/UserBadges';
+import { AccountStatus, UserRole, type AdminUser, type AdminUserAction } from '@/features/admin-user/admin-user.types';
+import { RoleBadge, StatusBadge } from '@/features/admin-user/components/UserBadges';
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
@@ -26,7 +26,7 @@ export function AdminUserDrawer({
               <StatusBadge status={user.status} />
             </div>
             <h2 id="user-detail-title" className="text-xl font-bold text-slate-900">{user.full_name ?? 'Unnamed user'}</h2>
-            <p className="mt-0.5 font-mono text-xs text-slate-500">{user.id}</p>
+            <p className="mt-0.5 text-xs text-slate-500">{user.email}</p>
           </div>
           <button type="button" onClick={onClose} className="rounded-lg p-2 text-slate-500 hover:bg-slate-200" aria-label="Close user details">✕</button>
         </div>

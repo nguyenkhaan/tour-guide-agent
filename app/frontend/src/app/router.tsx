@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import AdminUsersPage from "@/features/admin-users/AdminUsersPage";
+import AdminUsersPage from "@/features/admin-user/AdminUsersPage";
 
 export type RoutePath = "/admin/users" | "/";
 

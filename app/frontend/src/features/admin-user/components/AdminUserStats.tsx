@@ -1,4 +1,4 @@
-import { AccountStatus, UserRole, type AdminUser } from '@/features/admin-users/admin-users.types';
+import { AccountStatus, UserRole, type AdminUser } from '@/features/admin-user/admin-user.types';
 
 export function AdminUserStats({ users }: { users: AdminUser[] }) {
   const cards = [

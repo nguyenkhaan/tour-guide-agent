@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { INITIAL_ADMIN_USERS } from '@/features/admin-users/admin-users.data';
+import { useEffect, useMemo, useState } from 'react';
+import { useGetAdminUsersQuery } from '@/features/admin-user/admin-user.hook';
 import {
   AccountStatus,
   UserRole,
@@ -8,16 +8,17 @@ import {
   type AdminUserRoleFilter,
   type AdminUserSortField,
   type AdminUserStatusFilter,
-} from './admin-users.types';
-import { AdminUserActionModal } from '@/features/admin-users/components/AdminUserActionModal';
-import { AdminUserDrawer } from '@/features/admin-users/components/AdminUserDrawer';
-import { AdminUserFilters } from '@/features/admin-users/components/AdminUserFilters';
-import { AdminUserStats } from '@/features/admin-users/components/AdminUserStats';
-import { AdminUsersHeader } from '@/features/admin-users/components/AdminUsersHeader';
-import { AdminUsersTable } from '@/features/admin-users/components/AdminUsersTable';
+} from '@/features/admin-user/admin-user.types';
+import { AdminUserActionModal } from '@/features/admin-user/components/AdminUserActionModal';
+import { AdminUserDrawer } from '@/features/admin-user/components/AdminUserDrawer';
+import { AdminUserFilters } from '@/features/admin-user/components/AdminUserFilters';
+import { AdminUserStats } from '@/features/admin-user/components/AdminUserStats';
+import { AdminUsersHeader } from '@/features/admin-user/components/AdminUsersHeader';
+import { AdminUsersTable } from '@/features/admin-user/components/AdminUsersTable';
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState(INITIAL_ADMIN_USERS);
+  const { data, isError, isFetching, isLoading, refetch } = useGetAdminUsersQuery();
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState<AdminUserRoleFilter>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<AdminUserStatusFilter>('ALL');
@@ -29,12 +30,14 @@ export default function AdminUsersPage() {
   const [actionUser, setActionUser] = useState<AdminUser | null>(null);
   const [action, setAction] = useState<AdminUserAction | null>(null);
 
+  useEffect(() => setUsers(data ?? []), [data]);
+
   const filteredUsers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
     return users
       .filter((user) => {
-        const matchesQuery = !query || [user.id, user.email, user.full_name ?? '']
+        const matchesQuery = !query || [user.email, user.full_name ?? '']
           .some((value) => value.toLowerCase().includes(query));
         const matchesRole = selectedRole === 'ALL' || user.role === selectedRole;
         const matchesStatus = selectedStatus === 'ALL' || user.status === selectedStatus;
@@ -96,18 +99,20 @@ export default function AdminUsersPage() {
           : actionUser.role,
     };
 
-    setUsers((currentUsers) => currentUsers.map((user) => user.id === updatedUser.id ? updatedUser : user));
-    setSelectedUser((currentUser) => currentUser?.id === updatedUser.id ? updatedUser : currentUser);
+    // ponytail: keep actions local until mutation routes exist in api-contract.
+    setUsers((currentUsers) => currentUsers.map((user) => user.email === updatedUser.email ? updatedUser : user));
+    setSelectedUser((currentUser) => currentUser?.email === updatedUser.email ? updatedUser : currentUser);
     closeAction();
   };
 
   return (
     <div className="min-h-screen bg-slate-50 pb-16 text-slate-900">
       <AdminUsersHeader
-        isRefreshing={false}
+        isRefreshing={isFetching}
         onRefresh={() => {
-          setUsers(INITIAL_ADMIN_USERS);
+          setUsers(data ?? []);
           setSelectedUser(null);
+          void refetch();
         }}
       />
 
@@ -117,31 +122,46 @@ export default function AdminUsersPage() {
           <p className="mt-1 text-sm text-slate-600">Review registered user accounts, roles, and account statuses.</p>
         </div>
 
-        <AdminUserStats users={users} />
-        <AdminUserFilters
-          searchQuery={searchQuery}
-          selectedRole={selectedRole}
-          selectedStatus={selectedStatus}
-          onSearchChange={resetPage(setSearchQuery)}
-          onRoleChange={resetPage(setSelectedRole)}
-          onStatusChange={resetPage(setSelectedStatus)}
-          onReset={resetFilters}
-        />
-        <AdminUsersTable
-          users={paginatedUsers}
-          totalUsers={filteredUsers.length}
-          currentPage={currentPage}
-          pageSize={pageSize}
-          totalPages={totalPages}
-          sortBy={sortBy}
-          sortAsc={sortAsc}
-          onSort={toggleSort}
-          onView={setSelectedUser}
-          onAction={openAction}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={resetPage(setPageSize)}
-          onResetFilters={resetFilters}
-        />
+        {isLoading ? (
+          <p className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-600">
+            Loading users...
+          </p>
+        ) : isError ? (
+          <div className="rounded-xl border border-rose-200 bg-rose-50 p-8 text-center">
+            <p className="text-sm font-medium text-rose-700">Unable to load users.</p>
+            <button type="button" onClick={() => void refetch()} className="mt-3 text-xs font-semibold text-rose-700 underline">
+              Try again
+            </button>
+          </div>
+        ) : (
+          <>
+            <AdminUserStats users={users} />
+            <AdminUserFilters
+              searchQuery={searchQuery}
+              selectedRole={selectedRole}
+              selectedStatus={selectedStatus}
+              onSearchChange={resetPage(setSearchQuery)}
+              onRoleChange={resetPage(setSelectedRole)}
+              onStatusChange={resetPage(setSelectedStatus)}
+              onReset={resetFilters}
+            />
+            <AdminUsersTable
+              users={paginatedUsers}
+              totalUsers={filteredUsers.length}
+              currentPage={currentPage}
+              pageSize={pageSize}
+              totalPages={totalPages}
+              sortBy={sortBy}
+              sortAsc={sortAsc}
+              onSort={toggleSort}
+              onView={setSelectedUser}
+              onAction={openAction}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={resetPage(setPageSize)}
+              onResetFilters={resetFilters}
+            />
+          </>
+        )}
       </main>
 
       <AdminUserDrawer user={selectedUser} onClose={() => setSelectedUser(null)} onAction={openAction} />

@@ -3,7 +3,7 @@ import {
   UserRole,
   type AdminUserRoleFilter,
   type AdminUserStatusFilter,
-} from '../admin-users.types';
+} from '@/features/admin-user/admin-user.types';
 
 export function AdminUserFilters({
   searchQuery,
@@ -33,7 +33,7 @@ export function AdminUserFilters({
             type="search"
             value={searchQuery}
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search by name, email, or account ID..."
+            placeholder="Search by name or email..."
             className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
         </label>

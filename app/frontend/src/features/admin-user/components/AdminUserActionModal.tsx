@@ -1,4 +1,4 @@
-import type { AdminUser, AdminUserAction } from '@/features/admin-users/admin-users.types';
+import type { AdminUser, AdminUserAction } from '@/features/admin-user/admin-user.types';
 
 const actionLabels: Record<AdminUserAction, string> = {
   BAN: 'Ban account',

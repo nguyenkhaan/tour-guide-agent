@@ -9,7 +9,7 @@ admin_router = APIRouter(
 )
 
 @admin_router.get("/users", response_model=List[GetAdminUserResponse] , summary="Get all users in system") 
-async def getAdminUsers(
+async def get_admin_users_handler(
     service : AdminService = Depends(get_admin_service)
 ): 
-    return (await service.get_admin_users())
+    return (await service.get_admin_users_handler())

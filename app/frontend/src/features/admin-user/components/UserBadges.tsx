@@ -1,4 +1,4 @@
-import { AccountStatus, UserRole } from '@/features/admin-users/admin-users.types';
+import { AccountStatus, UserRole } from '@/features/admin-user/admin-user.types';
 
 const badgeClass = 'inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold';
 

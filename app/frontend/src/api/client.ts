@@ -29,17 +29,17 @@ publicClient.interceptors.request.use(
 )
 //interceptor de co the xu ly loi tap trung 
 const handleResponseError = (error : AxiosError) => {
-        if (error.response?.status == 401) {
-            console.log("Access token khong hop le") 
-            return 
-        }
+    if (error.response?.status === 401) {
+        console.log("Access token khong hop le")
     }
+    return Promise.reject(error)
+}
 
 publicClient.interceptors.response.use(
-        (response) => response.data,
-        handleResponseError
+    (response) => response,
+    handleResponseError
 )
 privateClient.interceptors.response.use(
-    (response) => response.data,
+    (response) => response,
     handleResponseError
 )

@@ -4,8 +4,8 @@ import {
   type AdminUser,
   type AdminUserAction,
   type AdminUserSortField,
-} from '../admin-users.types';
-import { RoleBadge, StatusBadge } from '@/features/admin-users/components/UserBadges';
+} from '@/features/admin-user/admin-user.types';
+import { RoleBadge, StatusBadge } from '@/features/admin-user/components/UserBadges';
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
@@ -56,11 +56,10 @@ export function AdminUsersTable({
           </thead>
           <tbody className="divide-y divide-slate-100 text-sm">
             {users.map((user) => (
-              <tr key={user.id} className="transition-colors hover:bg-slate-50/70">
+              <tr key={user.email} className="transition-colors hover:bg-slate-50/70">
                 <td className="px-4 py-4 sm:px-6">
                   <p className="font-semibold text-slate-900">{user.full_name ?? '—'}</p>
                   <p className="text-xs text-slate-500">{user.email}</p>
-                  <p className="mt-1 font-mono text-[10px] text-slate-400">{user.id}</p>
                 </td>
                 <td className="whitespace-nowrap px-4 py-4"><RoleBadge role={user.role} /></td>
                 <td className="whitespace-nowrap px-4 py-4"><StatusBadge status={user.status} /></td>

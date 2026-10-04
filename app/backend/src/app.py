@@ -4,7 +4,7 @@ from fastapi import APIRouter, FastAPI
 from src.modules.health.health_route import health_router
 from sqlalchemy import text
 from src.db import engine
-
+from fastapi.middleware.cors import CORSMiddleware
 from src.api.settings.config import DATABASE_URL
 
 # Context manager 
@@ -25,7 +25,13 @@ async def lifespan(app : FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-
+app.add_middleware(
+    CORSMiddleware, 
+    allow_origins=["http://localhost:5173"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 api_router = APIRouter(
     prefix = "/api"
 )

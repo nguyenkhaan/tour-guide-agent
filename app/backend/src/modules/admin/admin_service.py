@@ -7,7 +7,7 @@ from src.models.base_model import AccountStatus, UserRole
 class AdminService: 
     def __init__(self, db: AsyncSession): 
         self.db = db
-    async def get_admin_users(self) -> List[GetAdminUserResponse]: 
+    async def get_admin_users_handler(self) -> List[GetAdminUserResponse]: 
         return [
             GetAdminUserResponse(
                 email="nguyenkhaan2006@gmail.com",
