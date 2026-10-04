@@ -4,10 +4,11 @@ from src.modules.admin.admin_service import AdminService
 from src.modules.admin.admin_dto import GetAdminUserResponse
 from typing import List 
 admin_router = APIRouter(
-    prefix = "/admin"
+    prefix = "/admin", 
+    tags = ["Admin"]
 )
 
-@admin_router.get("/users", response_model=List[GetAdminUserResponse]) 
+@admin_router.get("/users", response_model=List[GetAdminUserResponse] , summary="Get all users in system") 
 async def getAdminUsers(
     service : AdminService = Depends(get_admin_service)
 ): 

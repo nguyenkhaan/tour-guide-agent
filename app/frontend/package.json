@@ -21,8 +21,9 @@
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "@vitejs/plugin-react": "latest",
+    "openapi-typescript": "^7.13.0",
     "tailwindcss": "latest",
-    "typescript": "latest",
+    "typescript": "^5",
     "vite": "latest"
   }
 }
