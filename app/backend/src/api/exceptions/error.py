@@ -3,10 +3,10 @@ from pydantic import BaseModel, Field
 
 
 class ErrorResponse(BaseModel):
-    code: str = Field(..., description="Mã lỗi ứng dụng")
-    message: str = Field(..., description="Mô tả lỗi dễ hiểu cho người dùng")
-    details: Any | None = Field(default=None, description="Chi tiết lỗi hoặc validation context")
-    request_id: str = Field(..., description="Mã định danh duy nhất theo dõi request")
+    code: str = Field(..., description="Application error code")
+    message: str = Field(..., description="Human-readable error message")
+    details: Any | None = Field(default=None, description="Error details or validation context")
+    request_id: str = Field(..., description="Unique request identifier")
 
 
 class AppException(Exception):
@@ -27,7 +27,7 @@ class AppException(Exception):
 class UnauthenticatedException(AppException):
     def __init__(
         self,
-        message: str = "Xác thực không thành công",
+        message: str = "Authentication failed",
         details: Any | None = None,
     ):
         super().__init__(
@@ -41,7 +41,7 @@ class UnauthenticatedException(AppException):
 class ForbiddenException(AppException):
     def __init__(
         self,
-        message: str = "Bạn không có quyền thực hiện thao tác này",
+        message: str = "You do not have permission to perform this action",
         details: Any | None = None,
     ):
         super().__init__(
@@ -55,7 +55,7 @@ class ForbiddenException(AppException):
 class NotFoundException(AppException):
     def __init__(
         self,
-        message: str = "Không tìm thấy tài nguyên yêu cầu",
+        message: str = "The requested resource was not found",
         details: Any | None = None,
     ):
         super().__init__(
@@ -69,7 +69,7 @@ class NotFoundException(AppException):
 class BadRequestException(AppException):
     def __init__(
         self,
-        message: str = "Yêu cầu không hợp lệ",
+        message: str = "Invalid request",
         details: Any | None = None,
     ):
         super().__init__(

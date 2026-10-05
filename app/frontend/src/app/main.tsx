@@ -10,7 +10,7 @@ const queryClient = new QueryClient();
 const root = document.getElementById("root");
 
 if (!root) {
-  throw new Error("Không tìm thấy phần tử #root.");
+  throw new Error("The #root element was not found.");
 }
 
 createRoot(root).render(

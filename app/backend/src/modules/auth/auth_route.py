@@ -1,51 +1,51 @@
 from fastapi import APIRouter, Depends, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db import get_async_db_session
+from src.api.middlewares.auth_middleware import get_current_user
 from src.models.users_model import Users
-from src.modules.auth.dependency import get_current_user
-from src.modules.auth.dto import (
+from src.modules.auth.auth_dependency import get_auth_service
+from src.modules.auth.auth_dto import (
     LoginRequest,
     RegisterRequest,
+    RegisterResponse,
     TokenResponse,
     UserResponse,
 )
-from src.modules.auth.service import AuthService
+from src.modules.auth.auth_service import AuthService
 
 auth_router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
 
 
 @auth_router.post(
     "/register",
-    response_model=TokenResponse,
+    response_model=RegisterResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Đăng ký tài khoản người dùng mới",
+    summary="Register a new user account",
 )
 async def register(
     req: RegisterRequest,
-    session: AsyncSession = Depends(get_async_db_session),
-) -> TokenResponse:
-    return await AuthService.register_user(session, req)
+    service: AuthService = Depends(get_auth_service),
+) -> RegisterResponse:
+    return await service.register_user(req)
 
 
 @auth_router.post(
     "/login",
     response_model=TokenResponse,
     status_code=status.HTTP_200_OK,
-    summary="Đăng nhập tài khoản",
+    summary="Log in to an account",
 )
 async def login(
     req: LoginRequest,
-    session: AsyncSession = Depends(get_async_db_session),
+    service: AuthService = Depends(get_auth_service),
 ) -> TokenResponse:
-    return await AuthService.login_user(session, req)
+    return await service.login_user(req)
 
 
 @auth_router.get(
     "/me",
     response_model=UserResponse,
     status_code=status.HTTP_200_OK,
-    summary="Lấy thông tin người dùng đang đăng nhập",
+    summary="Get the current user's information",
 )
 async def get_me(
     current_user: Users = Depends(get_current_user),
@@ -56,9 +56,9 @@ async def get_me(
 @auth_router.post(
     "/logout",
     status_code=status.HTTP_200_OK,
-    summary="Đăng xuất khỏi hệ thống",
+    summary="Log out of the system",
 )
 async def logout(
     current_user: Users = Depends(get_current_user),
 ) -> dict[str, str]:
-    return {"message": "Đăng xuất thành công"}
+    return {"message": "Logged out successfully"}

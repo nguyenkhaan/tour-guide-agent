@@ -49,7 +49,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         req_id = get_request_id(request)
         error_resp = ErrorResponse(
             code="VALIDATION_ERROR",
-            message="Dữ liệu yêu cầu không hợp lệ",
+            message="Invalid request data",
             details=exc.errors(),
             request_id=req_id,
         )

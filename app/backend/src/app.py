@@ -30,7 +30,7 @@ app = FastAPI(lifespan=lifespan)
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(
     CORSMiddleware, 
-    allow_origins=["http://localhost:5173"], 
+    allow_origins=["http://localhost:5173" , "https://travel.cloudian.io.vn"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -41,7 +41,7 @@ api_router = APIRouter(
 )
 # API include 
 from src.modules.admin.admin_route import admin_router
-from src.modules.auth.router import auth_router
+from src.modules.auth.auth_route import auth_router
 
 api_router.include_router(health_router) 
 api_router.include_router(admin_router) 
