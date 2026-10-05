@@ -3,6 +3,7 @@ from uuid import UUID
 
 import jwt
 from pwdlib import PasswordHash
+from pwdlib.hashers.bcrypt import BcryptHasher
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,7 +26,7 @@ from src.modules.auth.dto import (
     UserResponse,
 )
 
-password_hash = PasswordHash.recommended()
+password_hash = PasswordHash((BcryptHasher(),))
 
 class AuthService:
     @staticmethod
