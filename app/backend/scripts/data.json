@@ -1,0 +1,745 @@
+{
+  "users": [
+    {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "email": "admin@gmail.com",
+      "password": "user123",
+      "full_name": "Minh Nguyen",
+      "status": "ACTIVE",
+      "role": "ADMIN",
+      "created_at": "2026-01-01T01:00:00Z",
+      "updated_at": "2026-01-01T01:00:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000002",
+      "email": "employee1@gmail.com",
+      "password": "user123",
+      "full_name": "Lan Tran",
+      "status": "ACTIVE",
+      "role": "OPERATOR",
+      "created_at": "2026-01-01T01:05:00Z",
+      "updated_at": "2026-01-01T01:05:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000003",
+      "email": "employee2@gmail.com",
+      "password": "user123",
+      "full_name": "Huy Pham",
+      "status": "ACTIVE",
+      "role": "OPERATOR",
+      "created_at": "2026-01-01T01:10:00Z",
+      "updated_at": "2026-01-01T01:10:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "email": "customer1@gmail.com",
+      "password": "user123",
+      "full_name": "An Le",
+      "status": "ACTIVE",
+      "role": "USER",
+      "created_at": "2026-01-02T02:00:00Z",
+      "updated_at": "2026-01-02T02:00:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000005",
+      "email": "customer2@gmail.com",
+      "password": "user123",
+      "full_name": "Mai Vo",
+      "status": "ACTIVE",
+      "role": "USER",
+      "created_at": "2026-01-02T02:05:00Z",
+      "updated_at": "2026-01-02T02:05:00Z"
+    }
+  ],
+  "user_profile": [
+    {
+      "user_id": "00000000-0000-4000-8000-000000000001",
+      "travel_preferences": {"interests": ["culture", "technology"], "pace": "balanced"},
+      "special_needs": "No special requirements.",
+      "default_budget": "20000000.00",
+      "preferred_currency": "VND",
+      "created_at": "2026-01-01T01:00:00Z",
+      "updated_at": "2026-01-01T01:00:00Z"
+    },
+    {
+      "user_id": "00000000-0000-4000-8000-000000000002",
+      "travel_preferences": {"interests": ["history", "local food"], "pace": "active"},
+      "special_needs": "Prefers public transport.",
+      "default_budget": "12000000.00",
+      "preferred_currency": "VND",
+      "created_at": "2026-01-01T01:05:00Z",
+      "updated_at": "2026-01-01T01:05:00Z"
+    },
+    {
+      "user_id": "00000000-0000-4000-8000-000000000003",
+      "travel_preferences": {"interests": ["nature", "photography"], "pace": "slow"},
+      "special_needs": "Vegetarian meal options.",
+      "default_budget": "15000000.00",
+      "preferred_currency": "VND",
+      "created_at": "2026-01-01T01:10:00Z",
+      "updated_at": "2026-01-01T01:10:00Z"
+    },
+    {
+      "user_id": "00000000-0000-4000-8000-000000000004",
+      "travel_preferences": {"interests": ["architecture", "street food"], "pace": "balanced"},
+      "special_needs": "Avoids very early departures.",
+      "default_budget": "10000000.00",
+      "preferred_currency": "VND",
+      "created_at": "2026-01-02T02:00:00Z",
+      "updated_at": "2026-01-02T02:00:00Z"
+    },
+    {
+      "user_id": "00000000-0000-4000-8000-000000000005",
+      "travel_preferences": {"interests": ["parks", "cafes"], "pace": "relaxed"},
+      "special_needs": "Wheelchair-friendly venues preferred.",
+      "default_budget": "9000000.00",
+      "preferred_currency": "VND",
+      "created_at": "2026-01-02T02:05:00Z",
+      "updated_at": "2026-01-02T02:05:00Z"
+    }
+  ],
+  "agent_session": [
+    {
+      "id": "00000000-0000-4000-8000-000000000101",
+      "user_id": "00000000-0000-4000-8000-000000000004",
+      "summary": "Planning a three-day cultural and food trip to Ho Chi Minh City.",
+      "title": "Ho Chi Minh City weekend",
+      "status": "ACTIVE",
+      "created_at": "2026-01-05T02:00:00Z",
+      "updated_at": "2026-01-05T02:30:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000102",
+      "user_id": "00000000-0000-4000-8000-000000000005",
+      "summary": "Exploring accessible parks and cafes for a future city break.",
+      "title": "Accessible Saigon ideas",
+      "status": "ACTIVE",
+      "created_at": "2026-01-06T03:00:00Z",
+      "updated_at": "2026-01-06T03:20:00Z"
+    }
+  ],
+  "place_categories": [
+    {
+      "id": 1,
+      "name": "Culture and History",
+      "slug": "culture-history",
+      "description": "Museums, monuments, heritage buildings, and historic landmarks.",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Food and Markets",
+      "slug": "food-markets",
+      "description": "Local markets, food streets, and culinary experiences.",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": 3,
+      "name": "Parks and Nature",
+      "slug": "parks-nature",
+      "description": "Urban parks, gardens, and outdoor recreation areas.",
+      "created_at": "2026-01-01T00:00:00Z"
+    }
+  ],
+  "places": [
+    {
+      "id": "00000000-0000-4000-8000-000000000201",
+      "category_id": 1,
+      "name": "Independence Palace",
+      "slug": "independence-palace-ho-chi-minh-city",
+      "description": "A landmark of modern Vietnamese history with preserved state rooms and underground command facilities.",
+      "address": "135 Nam Ky Khoi Nghia, Ben Thanh Ward, District 1, Ho Chi Minh City",
+      "location": "POINT(106.695389 10.777011)",
+      "province": "Ho Chi Minh City",
+      "start_time": "2026-01-15T00:30:00Z",
+      "end_time": "2026-01-15T08:30:00Z",
+      "min_price": "40000.00",
+      "max_price": "65000.00",
+      "currency": "VND",
+      "average_rating": 4.6,
+      "images": ["places/independence-palace/front.jpg", "places/independence-palace/cabinet-room.jpg"],
+      "visual_attributes": {"style": "modernist", "indoor": true, "family_friendly": true},
+      "is_active": true,
+      "created_by": "00000000-0000-4000-8000-000000000001",
+      "updated_by": "00000000-0000-4000-8000-000000000002",
+      "created_at": "2026-01-03T01:00:00Z",
+      "updated_at": "2026-01-10T01:00:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000202",
+      "category_id": 2,
+      "name": "Ben Thanh Market",
+      "slug": "ben-thanh-market",
+      "description": "A central market known for Vietnamese dishes, produce, textiles, and souvenirs.",
+      "address": "Le Loi Street, Ben Thanh Ward, District 1, Ho Chi Minh City",
+      "location": "POINT(106.698278 10.772456)",
+      "province": "Ho Chi Minh City",
+      "start_time": "2026-01-15T00:00:00Z",
+      "end_time": "2026-01-15T12:00:00Z",
+      "min_price": "0.00",
+      "max_price": "500000.00",
+      "currency": "VND",
+      "average_rating": 4.2,
+      "images": ["places/ben-thanh-market/exterior.jpg", "places/ben-thanh-market/food-stalls.jpg"],
+      "visual_attributes": {"busy": true, "indoor": true, "best_time": "morning"},
+      "is_active": true,
+      "created_by": "00000000-0000-4000-8000-000000000001",
+      "updated_by": "00000000-0000-4000-8000-000000000003",
+      "created_at": "2026-01-03T01:10:00Z",
+      "updated_at": "2026-01-10T01:10:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000203",
+      "category_id": 3,
+      "name": "Tao Dan Park",
+      "slug": "tao-dan-park",
+      "description": "A leafy central park with walking paths, mature trees, exercise areas, and cultural sculptures.",
+      "address": "Truong Dinh Street, Ben Thanh Ward, District 1, Ho Chi Minh City",
+      "location": "POINT(106.693058 10.775497)",
+      "province": "Ho Chi Minh City",
+      "start_time": "2026-01-15T21:00:00Z",
+      "end_time": "2026-01-16T14:00:00Z",
+      "min_price": "0.00",
+      "max_price": "0.00",
+      "currency": "VND",
+      "average_rating": 4.5,
+      "images": ["places/tao-dan-park/walking-path.jpg"],
+      "visual_attributes": {"outdoor": true, "wheelchair_friendly": true, "shaded": true},
+      "is_active": true,
+      "created_by": "00000000-0000-4000-8000-000000000001",
+      "updated_by": "00000000-0000-4000-8000-000000000002",
+      "created_at": "2026-01-03T01:20:00Z",
+      "updated_at": "2026-01-10T01:20:00Z"
+    }
+  ],
+  "system_configs": [
+    {
+      "config_key": "planner.defaults",
+      "config_value": {"currency": "VND", "daily_start": "08:00", "daily_end": "20:00"},
+      "description": "Default itinerary planning preferences.",
+      "updated_by": "00000000-0000-4000-8000-000000000001",
+      "updated_at": "2026-01-04T01:00:00Z"
+    },
+    {
+      "config_key": "moderation.thresholds",
+      "config_value": {"auto_publish_confidence": 0.9, "manual_review_confidence": 0.65},
+      "description": "Confidence thresholds for review moderation.",
+      "updated_by": "00000000-0000-4000-8000-000000000001",
+      "updated_at": "2026-01-04T01:10:00Z"
+    }
+  ],
+  "trip_requests": [
+    {
+      "id": "00000000-0000-4000-8000-000000000301",
+      "parent_trip_request_id": null,
+      "user_id": "00000000-0000-4000-8000-000000000004",
+      "agent_session_id": "00000000-0000-4000-8000-000000000101",
+      "status": "PLANNED",
+      "version": 1,
+      "origin_name": "Hanoi",
+      "origin_location": "POINT(105.834160 21.027764)",
+      "destination_text": "Ho Chi Minh City, focusing on history, parks, and local food",
+      "start_date": "2026-02-06",
+      "duration_days": 3,
+      "budget": "8000000.00",
+      "currency": "VND",
+      "companions_count": 1,
+      "companions_info": [{"relationship": "friend", "age_group": "adult"}],
+      "preferences": {"pace": "balanced", "transport": ["walking", "taxi"], "interests": ["history", "street food"]},
+      "confirmed_at": "2026-01-05T02:20:00Z",
+      "created_at": "2026-01-05T02:05:00Z",
+      "updated_at": "2026-01-05T02:25:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000302",
+      "parent_trip_request_id": null,
+      "user_id": "00000000-0000-4000-8000-000000000005",
+      "agent_session_id": "00000000-0000-4000-8000-000000000102",
+      "status": "CONFIRMED",
+      "version": 1,
+      "origin_name": "Da Nang",
+      "origin_location": "POINT(108.202167 16.054407)",
+      "destination_text": "An accessible weekend in central Ho Chi Minh City",
+      "start_date": "2026-03-14",
+      "duration_days": 2,
+      "budget": "6000000.00",
+      "currency": "VND",
+      "companions_count": 0,
+      "companions_info": [],
+      "preferences": {"pace": "relaxed", "accessibility": true, "interests": ["parks", "cafes"]},
+      "confirmed_at": "2026-01-06T03:15:00Z",
+      "created_at": "2026-01-06T03:05:00Z",
+      "updated_at": "2026-01-06T03:15:00Z"
+    }
+  ],
+  "trip_request_selected_places": [
+    {
+      "id": "00000000-0000-4000-8000-000000001b01",
+      "trip_request_id": "00000000-0000-4000-8000-000000000301",
+      "place_id": "00000000-0000-4000-8000-000000000201",
+      "selection_status": "SELECTED",
+      "selection_reason": "The traveler explicitly requested a major historic landmark.",
+      "created_at": "2026-01-05T02:15:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000001b02",
+      "trip_request_id": "00000000-0000-4000-8000-000000000301",
+      "place_id": "00000000-0000-4000-8000-000000000202",
+      "selection_status": "SELECTED",
+      "selection_reason": "Matches the local food preference and is near other day-one activities.",
+      "created_at": "2026-01-05T02:16:00Z"
+    }
+  ],
+  "itineraries": [
+    {
+      "id": "00000000-0000-4000-8000-000000000401",
+      "trip_request_id": "00000000-0000-4000-8000-000000000301",
+      "option_index": 0,
+      "version": 1,
+      "title": "Three Days of Saigon History and Flavors",
+      "summary": "A balanced central-city itinerary combining heritage sites, green space, and approachable local food.",
+      "total_days": 3,
+      "estimated_total_cost": "7350000.00",
+      "cost_breakdown": {"transport": 2200000, "lodging": 3000000, "food": 1500000, "tickets": 650000, "buffer": 0},
+      "currency": "VND",
+      "highlights": ["Independence Palace", "Ben Thanh Market", "Tao Dan Park"],
+      "warnings": ["Market prices should be confirmed before ordering."],
+      "trade_offs": "Keeps travel distances short but focuses mainly on District 1.",
+      "luggage_checklist": ["light rain jacket", "walking shoes", "reusable water bottle"],
+      "ranking_score": "92.50",
+      "status": "SELECTED",
+      "created_at": "2026-01-05T02:25:00Z",
+      "updated_at": "2026-01-05T02:30:00Z"
+    }
+  ],
+  "itinerary_days": [
+    {
+      "id": "00000000-0000-4000-8000-000000000501",
+      "itinerary_id": "00000000-0000-4000-8000-000000000401",
+      "day_number": 1,
+      "created_at": "2026-01-05T02:25:00Z",
+      "title": "Historic Central Saigon",
+      "description": "Explore a major historic landmark and finish with an easy market dinner.",
+      "estimated_total_cost": "500000.00"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000502",
+      "itinerary_id": "00000000-0000-4000-8000-000000000401",
+      "day_number": 2,
+      "created_at": "2026-01-05T02:26:00Z",
+      "title": "Green Morning and Neighborhood Cafes",
+      "description": "A relaxed morning in Tao Dan Park followed by flexible cafe time.",
+      "estimated_total_cost": "350000.00"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000503",
+      "itinerary_id": "00000000-0000-4000-8000-000000000401",
+      "day_number": 3,
+      "created_at": "2026-01-05T02:27:00Z",
+      "title": "Flexible Departure Day",
+      "description": "A light final morning with time reserved for packing and airport transfer.",
+      "estimated_total_cost": "250000.00"
+    }
+  ],
+  "itinerary_activities": [
+    {
+      "id": "00000000-0000-4000-8000-000000000601",
+      "itinerary_day_id": "00000000-0000-4000-8000-000000000501",
+      "place_id": "00000000-0000-4000-8000-000000000201",
+      "order_index": 0,
+      "title": "Tour Independence Palace",
+      "activity_type": "SIGHTSEEING",
+      "description": "Visit the reception halls, command bunker, and rooftop exhibition.",
+      "start_time": "09:00:00",
+      "end_time": "11:00:00",
+      "estimated_cost": "65000.00",
+      "created_at": "2026-01-05T02:25:00Z",
+      "updated_at": "2026-01-05T02:25:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000602",
+      "itinerary_day_id": "00000000-0000-4000-8000-000000000501",
+      "place_id": "00000000-0000-4000-8000-000000000202",
+      "order_index": 1,
+      "title": "Dinner at Ben Thanh Market",
+      "activity_type": "FOOD",
+      "description": "Sample two local dishes and browse the evening stalls.",
+      "start_time": "18:00:00",
+      "end_time": "20:00:00",
+      "estimated_cost": "300000.00",
+      "created_at": "2026-01-05T02:25:00Z",
+      "updated_at": "2026-01-05T02:25:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000603",
+      "itinerary_day_id": "00000000-0000-4000-8000-000000000502",
+      "place_id": "00000000-0000-4000-8000-000000000203",
+      "order_index": 0,
+      "title": "Morning walk in Tao Dan Park",
+      "activity_type": "OUTDOOR",
+      "description": "Take a shaded walking loop and stop at the central garden.",
+      "start_time": "07:30:00",
+      "end_time": "09:00:00",
+      "estimated_cost": "0.00",
+      "created_at": "2026-01-05T02:26:00Z",
+      "updated_at": "2026-01-05T02:26:00Z"
+    }
+  ],
+  "itinerary_transits": [
+    {
+      "id": "00000000-0000-4000-8000-000000000701",
+      "itinerary_day_id": "00000000-0000-4000-8000-000000000501",
+      "from_activity_id": "00000000-0000-4000-8000-000000000601",
+      "to_activity_id": "00000000-0000-4000-8000-000000000602",
+      "transport_mode": "WALKING",
+      "estimated_duration_minutes": 18,
+      "estimated_distance_km": "1.30",
+      "estimated_cost": "0.00",
+      "route_notes": "Use Nam Ky Khoi Nghia and Le Loi sidewalks; allow extra time at major crossings."
+    }
+  ],
+  "itinerary_proposals": [
+    {
+      "id": "00000000-0000-4000-8000-000000000801",
+      "itinerary_id": "00000000-0000-4000-8000-000000000401",
+      "base_itinerary_id": "00000000-0000-4000-8000-000000000401",
+      "target_version": 2,
+      "proposed_by": "CRITIC_AGENT",
+      "diff_payload": {"day": 1, "change": "Move market visit to evening to avoid peak daytime heat."},
+      "rationale": "The evening schedule improves comfort while preserving the selected food experience.",
+      "warnings": ["Confirm the operating hours on the travel date."],
+      "status": "ACCEPTED",
+      "user_decision_at": "2026-01-05T02:29:00Z",
+      "created_at": "2026-01-05T02:28:00Z"
+    }
+  ],
+  "trips": [
+    {
+      "id": "00000000-0000-4000-8000-000000000901",
+      "user_id": "00000000-0000-4000-8000-000000000004",
+      "trip_request_id": "00000000-0000-4000-8000-000000000301",
+      "finalized_itinerary_id": "00000000-0000-4000-8000-000000000401",
+      "status": "COMPLETED",
+      "gps_consent": true,
+      "actual_start_date": "2026-02-06",
+      "actual_end_date": "2026-02-08",
+      "created_at": "2026-01-05T02:30:00Z",
+      "updated_at": "2026-02-08T14:00:00Z"
+    }
+  ],
+  "agent_runs": [
+    {
+      "id": "00000000-0000-4000-8000-000000000a01",
+      "workflow_id": "00000000-0000-4000-8000-000000000a00",
+      "parent_run_id": null,
+      "user_id": "00000000-0000-4000-8000-000000000004",
+      "agent_session_id": "00000000-0000-4000-8000-000000000101",
+      "trip_request_id": "00000000-0000-4000-8000-000000000301",
+      "trip_id": "00000000-0000-4000-8000-000000000901",
+      "agent_type": "PLANNER",
+      "trigger_type": "USER",
+      "status": "COMPLETED",
+      "input_summary": {"destination": "Ho Chi Minh City", "days": 3, "budget": 8000000},
+      "output_summary": {"itinerary_id": "00000000-0000-4000-8000-000000000401", "options_generated": 1},
+      "decision_summary": "Selected central attractions to minimize transit and stay within budget.",
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-01-05T02:20:00Z",
+      "completed_at": "2026-01-05T02:27:00Z",
+      "expires_at": "2026-01-12T02:27:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000a02",
+      "workflow_id": "00000000-0000-4000-8000-000000000a00",
+      "parent_run_id": "00000000-0000-4000-8000-000000000a01",
+      "user_id": "00000000-0000-4000-8000-000000000004",
+      "agent_session_id": "00000000-0000-4000-8000-000000000101",
+      "trip_request_id": "00000000-0000-4000-8000-000000000301",
+      "trip_id": "00000000-0000-4000-8000-000000000901",
+      "agent_type": "CRITIC",
+      "trigger_type": "AGENT",
+      "status": "COMPLETED",
+      "input_summary": {"itinerary_id": "00000000-0000-4000-8000-000000000401", "checks": ["budget", "hours", "transit"]},
+      "output_summary": {"passed": true, "proposal_id": "00000000-0000-4000-8000-000000000801"},
+      "decision_summary": "The itinerary is feasible after moving the market visit to evening.",
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-01-05T02:27:00Z",
+      "completed_at": "2026-01-05T02:29:00Z",
+      "expires_at": "2026-01-12T02:29:00Z"
+    }
+  ],
+  "agent_memories": [
+    {
+      "id": "00000000-0000-4000-8000-000000000b01",
+      "agent_session_id": "00000000-0000-4000-8000-000000000101",
+      "trip_id": "00000000-0000-4000-8000-000000000901",
+      "agent_type": "PLANNER",
+      "scope": "TRIP",
+      "memory_key": "traveler_priorities",
+      "memory_value": {"must_visit": ["Independence Palace"], "avoid": ["very early departures"]},
+      "expires_at": "2026-02-15T00:00:00Z",
+      "created_at": "2026-01-05T02:21:00Z"
+    }
+  ],
+  "tool_calls": [
+    {
+      "id": "00000000-0000-4000-8000-000000000c01",
+      "agent_run_id": "00000000-0000-4000-8000-000000000a01",
+      "tool_name": "places_search",
+      "arguments": {"city": "Ho Chi Minh City", "interests": ["history", "food"]},
+      "result": {"place_ids": ["00000000-0000-4000-8000-000000000201", "00000000-0000-4000-8000-000000000202"]},
+      "status": "SUCCEEDED",
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-01-05T02:20:30Z",
+      "completed_at": "2026-01-05T02:20:31Z",
+      "expires_at": "2026-01-12T02:20:31Z"
+    }
+  ],
+  "evaluation_results": [
+    {
+      "id": "00000000-0000-4000-8000-000000000d01",
+      "itinerary_id": "00000000-0000-4000-8000-000000000401",
+      "proposal_id": "00000000-0000-4000-8000-000000000801",
+      "agent_run_id": "00000000-0000-4000-8000-000000000a02",
+      "is_passed": true,
+      "budget_status": true,
+      "opening_hours_status": true,
+      "travel_time_status": true,
+      "safety_status": true,
+      "hard_failures": [],
+      "soft_warnings": ["Reconfirm market hours one day before departure."],
+      "evaluated_at": "2026-01-05T02:28:30Z"
+    }
+  ],
+  "messages": [
+    {
+      "id": "00000000-0000-4000-8000-000000000e01",
+      "agent_session_id": "00000000-0000-4000-8000-000000000101",
+      "role": "user",
+      "sources": [],
+      "content": "Plan a three-day Ho Chi Minh City trip with history and local food under 8 million VND.",
+      "metadata": {"locale": "en-US", "client": "web"},
+      "agent_run_id": null,
+      "created_at": "2026-01-05T02:20:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000e02",
+      "agent_session_id": "00000000-0000-4000-8000-000000000101",
+      "role": "assistant",
+      "sources": [{"type": "place", "id": "00000000-0000-4000-8000-000000000201"}],
+      "content": "I created a balanced three-day itinerary centered on District 1 with an estimated cost of 7.35 million VND.",
+      "metadata": {"model": "tour-planner", "latency_ms": 840},
+      "agent_run_id": "00000000-0000-4000-8000-000000000a01",
+      "created_at": "2026-01-05T02:29:30Z"
+    }
+  ],
+  "media_files": [
+    {
+      "id": "00000000-0000-4000-8000-000000000f01",
+      "user_id": "00000000-0000-4000-8000-000000000004",
+      "message_id": "00000000-0000-4000-8000-000000000e01",
+      "object_key": "requests/00000000-0000-4000-8000-000000000004/reference-map.jpg",
+      "file_name": "reference-map.jpg",
+      "file_size_bytes": 248320,
+      "mime_type": "image/jpeg",
+      "purpose": "REQUEST_IMAGE",
+      "created_at": "2026-01-05T02:19:50Z"
+    }
+  ],
+  "place_narrations": [
+    {
+      "id": "00000000-0000-4000-8000-000000001001",
+      "place_id": "00000000-0000-4000-8000-000000000201",
+      "title": "The History of Independence Palace",
+      "audio_object_key": "narrations/independence-palace/en-introduction.mp3",
+      "transcript": "Independence Palace stands on the site of the former Norodom Palace and preserves an important chapter of modern Vietnamese history.",
+      "duration_seconds": 94,
+      "is_active": true,
+      "created_by": "00000000-0000-4000-8000-000000000002",
+      "created_at": "2026-01-10T04:00:00Z"
+    }
+  ],
+  "operator_proposals": [
+    {
+      "id": "00000000-0000-4000-8000-000000001101",
+      "operator_id": "00000000-0000-4000-8000-000000000002",
+      "proposal_type": "PLACE_UPDATE",
+      "target_place_id": "00000000-0000-4000-8000-000000000202",
+      "related_trip_id": "00000000-0000-4000-8000-000000000901",
+      "title": "Clarify Ben Thanh Market evening hours",
+      "description": "Separate the daytime indoor market hours from nearby evening food-stall hours.",
+      "proposed_payload": {"day_market_closes": "18:00", "night_food_area_closes": "22:00"},
+      "status": "APPROVED",
+      "admin_id": "00000000-0000-4000-8000-000000000001",
+      "admin_note": "Verified against the venue notice and approved.",
+      "created_at": "2026-01-10T03:00:00Z",
+      "reviewed_at": "2026-01-10T05:00:00Z"
+    }
+  ],
+  "place_reviews": [
+    {
+      "id": "00000000-0000-4000-8000-000000001201",
+      "place_id": "00000000-0000-4000-8000-000000000201",
+      "user_id": "00000000-0000-4000-8000-000000000004",
+      "trip_id": "00000000-0000-4000-8000-000000000901",
+      "rating": 5,
+      "comment": "The preserved rooms were fascinating, and the audio narration made the visit easy to follow.",
+      "is_valid": true,
+      "published_at": "2026-02-09T03:00:00Z",
+      "created_at": "2026-02-09T02:50:00Z",
+      "updated_at": "2026-02-09T03:00:00Z"
+    }
+  ],
+  "review_reports": [
+    {
+      "id": "00000000-0000-4000-8000-000000001301",
+      "review_id": "00000000-0000-4000-8000-000000001201",
+      "reporter_user_id": "00000000-0000-4000-8000-000000000005",
+      "reason_code": "IRRELEVANT",
+      "details": "The reporter initially believed the review described a different building.",
+      "status": "RESOLVED",
+      "resolved_by": "00000000-0000-4000-8000-000000000001",
+      "resolution": "The review references the correct venue; no moderation action required.",
+      "resolved_at": "2026-02-09T05:00:00Z",
+      "created_at": "2026-02-09T04:00:00Z"
+    }
+  ],
+  "review_moderation_logs": [
+    {
+      "id": "00000000-0000-4000-8000-000000001401",
+      "review_id": "00000000-0000-4000-8000-000000001201",
+      "moderator_id": "00000000-0000-4000-8000-000000000001",
+      "moderator_type": "ADMIN",
+      "action": "APPROVE",
+      "previous_status": "PENDING",
+      "new_status": "PUBLIC",
+      "reason": "The review is relevant, specific, and linked to a completed trip.",
+      "details": {"trip_verified": true, "spam_score": 0.03},
+      "created_at": "2026-02-09T03:00:00Z"
+    }
+  ],
+  "trip_summaries": [
+    {
+      "id": "00000000-0000-4000-8000-000000001501",
+      "trip_id": "00000000-0000-4000-8000-000000000901",
+      "status": "CONFIRMED",
+      "overall_rating": 5,
+      "diary_notes": "The central route was easy to follow, and the evening market visit was the highlight.",
+      "confirmed_at": "2026-02-09T02:30:00Z",
+      "created_at": "2026-02-08T15:00:00Z",
+      "updated_at": "2026-02-09T02:30:00Z"
+    }
+  ],
+  "trip_summary_places": [
+    {
+      "id": "00000000-0000-4000-8000-000000001601",
+      "trip_summary_id": "00000000-0000-4000-8000-000000001501",
+      "place_id": "00000000-0000-4000-8000-000000000201",
+      "place_name": "Independence Palace",
+      "status": "VISITED",
+      "confidence": "0.98",
+      "evidence": {"gps_match": true, "photo_count": 3, "dwell_minutes": 112},
+      "is_user_corrected": false,
+      "notes": "Visited according to plan on the first morning.",
+      "created_at": "2026-02-08T15:05:00Z",
+      "updated_at": "2026-02-08T15:05:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000001602",
+      "trip_summary_id": "00000000-0000-4000-8000-000000001501",
+      "place_id": "00000000-0000-4000-8000-000000000202",
+      "place_name": "Ben Thanh Market",
+      "status": "VISITED",
+      "confidence": "0.95",
+      "evidence": {"gps_match": true, "receipt_detected": true, "dwell_minutes": 96},
+      "is_user_corrected": false,
+      "notes": "Visited during the evening food service period.",
+      "created_at": "2026-02-08T15:06:00Z",
+      "updated_at": "2026-02-08T15:06:00Z"
+    }
+  ],
+  "trip_expenses": [
+    {
+      "id": "00000000-0000-4000-8000-000000001701",
+      "trip_summary_id": "00000000-0000-4000-8000-000000001501",
+      "category": "TICKET",
+      "amount": "65000.00",
+      "currency": "VND",
+      "spent_on": "2026-02-06",
+      "note": "Independence Palace admission.",
+      "created_at": "2026-02-06T04:00:00Z",
+      "updated_at": "2026-02-06T04:00:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000001702",
+      "trip_summary_id": "00000000-0000-4000-8000-000000001501",
+      "category": "FOOD",
+      "amount": "285000.00",
+      "currency": "VND",
+      "spent_on": "2026-02-06",
+      "note": "Dinner and drinks near Ben Thanh Market.",
+      "created_at": "2026-02-06T13:30:00Z",
+      "updated_at": "2026-02-06T13:30:00Z"
+    }
+  ],
+  "next_trip_suggestions": [
+    {
+      "id": "00000000-0000-4000-8000-000000001801",
+      "trip_summary_id": "00000000-0000-4000-8000-000000001501",
+      "rank": 1,
+      "title": "A Food Weekend in Can Tho",
+      "description": "Build on the market experience with floating-market breakfasts and Mekong Delta specialties.",
+      "suggested_places": [{"name": "Cai Rang Floating Market"}, {"name": "Ninh Kieu Wharf"}],
+      "estimated_budget": "4500000.00",
+      "currency": "VND",
+      "started_agent_session_id": "00000000-0000-4000-8000-000000000102",
+      "created_at": "2026-02-09T02:35:00Z",
+      "used_at": "2026-02-10T03:00:00Z"
+    }
+  ],
+  "trip_alerts": [
+    {
+      "id": "00000000-0000-4000-8000-000000001901",
+      "trip_id": "00000000-0000-4000-8000-000000000901",
+      "alert_type": "OPERATING_HOURS",
+      "severity": "LOW",
+      "title": "Confirm evening market stalls",
+      "message": "Indoor stalls may close before the surrounding evening food area.",
+      "source": "operator_verified_notice",
+      "checked_at": "2026-02-05T03:00:00Z",
+      "confidence": "0.91",
+      "affected_activity_id": "00000000-0000-4000-8000-000000000602",
+      "alternative_proposal_id": "00000000-0000-4000-8000-000000000801",
+      "is_resolved": true,
+      "created_at": "2026-02-05T03:01:00Z"
+    }
+  ],
+  "audit_access_logs": [
+    {
+      "id": "00000000-0000-4000-8000-000000001a01",
+      "actor_id": "00000000-0000-4000-8000-000000000001",
+      "target_user_id": "00000000-0000-4000-8000-000000000004",
+      "agent_run_id": "00000000-0000-4000-8000-000000000a02",
+      "purpose": "Investigate a user-submitted itinerary quality report.",
+      "ticket_id": "SUP-2026-0042",
+      "client_ip": "203.0.113.24",
+      "user_agent": "TourGuideAdmin/1.0",
+      "accessed_at": "2026-02-10T04:00:00Z"
+    }
+  ],
+  "entity_log": [
+    {
+      "id": "00000000-0000-4000-8000-000000001c01",
+      "entity_type": "PLACE",
+      "entity_id": "00000000-0000-4000-8000-000000000202",
+      "field_name": "opening_hours",
+      "checked_at": "2026-02-05T03:00:00Z",
+      "confidence": "0.91",
+      "agent_run_id": "00000000-0000-4000-8000-000000000a02",
+      "tool_call_id": "00000000-0000-4000-8000-000000000c01",
+      "created_at": "2026-02-05T03:01:00Z"
+    }
+  ]
+}
