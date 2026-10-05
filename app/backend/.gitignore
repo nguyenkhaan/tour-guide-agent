@@ -224,3 +224,7 @@ service_account*.json
 *backup*.sql
 *dump*.sql
 *.sql.gz
+
+# Environment variables
+.env
+
