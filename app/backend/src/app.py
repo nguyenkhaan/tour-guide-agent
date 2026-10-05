@@ -6,6 +6,8 @@ from sqlalchemy import text
 from src.db import engine
 from fastapi.middleware.cors import CORSMiddleware
 from src.api.settings.config import DATABASE_URL
+from src.api.middlewares.request_id_middleware import RequestIDMiddleware
+from src.api.https.exception import register_exception_handlers
 
 # Context manager 
 @asynccontextmanager 
@@ -25,6 +27,7 @@ async def lifespan(app : FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.add_middleware(RequestIDMiddleware)
 app.add_middleware(
     CORSMiddleware, 
     allow_origins=["http://localhost:5173"], 
@@ -32,11 +35,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+register_exception_handlers(app)
 api_router = APIRouter(
     prefix = "/api"
 )
 # API include 
 from src.modules.admin.admin_route import admin_router
+from src.modules.auth.router import auth_router
+
 api_router.include_router(health_router) 
 api_router.include_router(admin_router) 
+app.include_router(auth_router)
 app.include_router(api_router)
