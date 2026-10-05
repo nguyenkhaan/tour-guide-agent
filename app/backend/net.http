@@ -1,0 +1,63 @@
+@baseUrl = http://localhost:4000
+@accessToken = paste-access-token-here
+@userId = 00000000-0000-0000-0000-000000000000
+
+### Liveness check
+GET {{baseUrl}}/api/health
+
+### Register a user
+POST {{baseUrl}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "full_name": "Example User"
+}
+
+### Log in and copy access_token into @accessToken above
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+
+### Get the current user
+GET {{baseUrl}}/api/v1/auth/me
+Authorization: Bearer {{accessToken}}
+
+### Log out
+POST {{baseUrl}}/api/v1/auth/logout
+Authorization: Bearer {{accessToken}}
+
+### Test access-token authentication
+GET {{baseUrl}}/api/health/auth-test
+Authorization: Bearer {{accessToken}}
+
+### Test admin role authorization
+GET {{baseUrl}}/api/health/role-test
+Authorization: Bearer {{accessToken}}
+
+### Test the shared not-found exception response
+GET {{baseUrl}}/api/health/exception-test
+
+### List users
+GET {{baseUrl}}/api/admin/users?limit=10&offset=0
+
+### Update a user's role
+PUT {{baseUrl}}/api/admin/users/role/{{userId}}
+Content-Type: application/json
+
+{
+  "role": "ADMIN"
+}
+
+### Update a user's status
+PUT {{baseUrl}}/api/admin/users/status/{{userId}}
+Content-Type: application/json
+
+{
+  "status": "ACTIVE"
+}
