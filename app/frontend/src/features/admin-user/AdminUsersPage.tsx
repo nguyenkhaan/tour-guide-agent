@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useGetAdminUsersQuery } from '@/features/admin-user/admin-user.hook';
+import {
+  useGetAdminUsersQuery,
+  usePutAssignRoleMutation,
+  usePutUserStatusMutation,
+} from '@/features/admin-user/admin-user.hook';
 import {
   AccountStatus,
   UserRole,
@@ -17,7 +21,6 @@ import { AdminUsersHeader } from '@/features/admin-user/components/AdminUsersHea
 import { AdminUsersTable } from '@/features/admin-user/components/AdminUsersTable';
 
 export default function AdminUsersPage() {
-  const { data, isError, isFetching, isLoading, refetch } = useGetAdminUsersQuery();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState<AdminUserRoleFilter>('ALL');
@@ -26,11 +29,15 @@ export default function AdminUsersPage() {
   const [sortAsc, setSortAsc] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+  const offset = (currentPage - 1) * pageSize;
+  const { data, isError, isFetching, isLoading, refetch } = useGetAdminUsersQuery(pageSize, offset);
+  const assignRoleMutation = usePutAssignRoleMutation();
+  const userStatusMutation = usePutUserStatusMutation();
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [actionUser, setActionUser] = useState<AdminUser | null>(null);
   const [action, setAction] = useState<AdminUserAction | null>(null);
 
-  useEffect(() => setUsers(data ?? []), [data]);
+  useEffect(() => setUsers(data?.items ?? []), [data]);
 
   const filteredUsers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -52,8 +59,9 @@ export default function AdminUsersPage() {
       });
   }, [users, searchQuery, selectedRole, selectedStatus, sortBy, sortAsc]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
-  const paginatedUsers = filteredUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const totalUsers = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalUsers / pageSize));
+  const paginatedUsers = filteredUsers;
 
   const resetPage = <T,>(setter: (value: T) => void) => (value: T) => {
     setter(value);
@@ -73,6 +81,8 @@ export default function AdminUsersPage() {
   };
 
   const openAction = (user: AdminUser, nextAction: AdminUserAction) => {
+    assignRoleMutation.reset();
+    userStatusMutation.reset();
     setActionUser(user);
     setAction(nextAction);
   };
@@ -85,24 +95,27 @@ export default function AdminUsersPage() {
   const confirmAction = () => {
     if (!actionUser || !action) return;
 
-    const updatedUser: AdminUser = {
-      ...actionUser,
-      status: action === 'BAN'
-        ? AccountStatus.BANNED
-        : action === 'UNBAN'
-          ? AccountStatus.ACTIVE
-          : actionUser.status,
-      role: action === 'MAKE_OPERATOR'
-        ? UserRole.OPERATOR
-        : action === 'REVOKE_OPERATOR'
-          ? UserRole.USER
-          : actionUser.role,
+    const updateUser = (updatedUser: AdminUser) => {
+      setUsers((currentUsers) => currentUsers.map((user) => user.id === updatedUser.id ? updatedUser : user));
+      setSelectedUser((currentUser) => currentUser?.id === updatedUser.id ? updatedUser : currentUser);
+      closeAction();
+      void refetch();
     };
 
-    // ponytail: keep actions local until mutation routes exist in api-contract.
-    setUsers((currentUsers) => currentUsers.map((user) => user.email === updatedUser.email ? updatedUser : user));
-    setSelectedUser((currentUser) => currentUser?.email === updatedUser.email ? updatedUser : currentUser);
-    closeAction();
+    if (action === 'MAKE_OPERATOR' || action === 'REVOKE_OPERATOR') {
+      const role = action === 'MAKE_OPERATOR' ? UserRole.OPERATOR : UserRole.USER;
+      assignRoleMutation.mutate(
+        { userId: actionUser.id, request: { role } },
+        { onSuccess: () => updateUser({ ...actionUser, role }) },
+      );
+      return;
+    }
+
+    const status = action === 'BAN' ? AccountStatus.BANNED : AccountStatus.ACTIVE;
+    userStatusMutation.mutate(
+      { userId: actionUser.id, request: { status } },
+      { onSuccess: () => updateUser({ ...actionUser, status }) },
+    );
   };
 
   return (
@@ -110,7 +123,7 @@ export default function AdminUsersPage() {
       <AdminUsersHeader
         isRefreshing={isFetching}
         onRefresh={() => {
-          setUsers(data ?? []);
+          setUsers(data?.items ?? []);
           setSelectedUser(null);
           void refetch();
         }}
@@ -147,7 +160,7 @@ export default function AdminUsersPage() {
             />
             <AdminUsersTable
               users={paginatedUsers}
-              totalUsers={filteredUsers.length}
+              totalUsers={totalUsers}
               currentPage={currentPage}
               pageSize={pageSize}
               totalPages={totalPages}
@@ -165,7 +178,14 @@ export default function AdminUsersPage() {
       </main>
 
       <AdminUserDrawer user={selectedUser} onClose={() => setSelectedUser(null)} onAction={openAction} />
-      <AdminUserActionModal user={actionUser} action={action} onCancel={closeAction} onConfirm={confirmAction} />
+      <AdminUserActionModal
+        user={actionUser}
+        action={action}
+        isPending={assignRoleMutation.isPending || userStatusMutation.isPending}
+        isError={assignRoleMutation.isError || userStatusMutation.isError}
+        onCancel={closeAction}
+        onConfirm={confirmAction}
+      />
     </div>
   );
 }

@@ -1,7 +1,14 @@
-import type { components, paths } from '@/types/api-contract';
+import type { components } from '@/types/api-contract';
 
-export type AdminUsersResponse = paths['/api/admin/users']['get']['responses'][200]['content']['application/json'];
-export type AdminUser = AdminUsersResponse[number];
+export type AdminUser = components['schemas']['GetAdminUserResponse'];
+export type AdminUsersResponse = {
+  items: AdminUser[];
+  total: number;
+};
+export type PutAssignRoleRequest = components['schemas']['PutAssignRoleRequest'];
+export type PutAssignRoleResponse = components['schemas']['PutAssignRoleResponse'];
+export type PutUserStatusRequest = components['schemas']['PutUserStatusRequest'];
+export type PutUserStatusResponse = components['schemas']['PutUserStatusResponse'];
 
 export type UserRole = components['schemas']['UserRole'];
 export const UserRole = {

@@ -29,8 +29,42 @@ export interface paths {
             cookie?: never;
         };
         /** Get all users in system */
-        get: operations["getAdminUsers_api_admin_users_get"];
+        get: operations["get_admin_users_handler_api_admin_users_get"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/users/role/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update user role */
+        put: operations["put_assign_role_handler_api_admin_users_role__user_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/users/status/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update user status */
+        put: operations["put_user_status_api_admin_users_status__user_id__put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -49,12 +83,17 @@ export interface components {
         AccountStatus: "DISABLED" | "BANNED" | "ACTIVE";
         /** GetAdminUserResponse */
         GetAdminUserResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /** Email */
             email: string;
             /** Full Name */
-            full_name: string;
-            status: components["schemas"]["AccountStatus"];
-            role: components["schemas"]["UserRole"];
+            full_name: string | null;
+            status: components["schemas"]["AccountStatus"] | null;
+            role: components["schemas"]["UserRole"] | null;
             /**
              * Created At
              * Format: date-time
@@ -66,11 +105,58 @@ export interface components {
              */
             updated_at: string;
         };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
+        /** PutAssignRoleRequest */
+        PutAssignRoleRequest: {
+            role: components["schemas"]["UserRole"];
+        };
+        /**
+         * PutAssignRoleResponse
+         * @description Update user's role
+         */
+        PutAssignRoleResponse: {
+            /** Message */
+            message: string;
+            /** Path */
+            path: string;
+        };
+        /** PutUserStatusRequest */
+        PutUserStatusRequest: {
+            status: components["schemas"]["AccountStatus"];
+        };
+        /**
+         * PutUserStatusResponse
+         * @description Update user's status
+         *     Code tay chu meo phai AI code nhe may con ga
+         */
+        PutUserStatusResponse: {
+            /** Message */
+            message: string;
+            /** Path */
+            path: string;
+        };
         /**
          * UserRole
          * @enum {string}
          */
         UserRole: "USER" | "ADMIN" | "OPERATOR";
+        /** ValidationError */
+        ValidationError: {
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
+        };
     };
     responses: never;
     parameters: never;
@@ -100,9 +186,12 @@ export interface operations {
             };
         };
     };
-    getAdminUsers_api_admin_users_get: {
+    get_admin_users_handler_api_admin_users_get: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -116,6 +205,85 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GetAdminUserResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_assign_role_handler_api_admin_users_role__user_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutAssignRoleRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PutAssignRoleResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_user_status_api_admin_users_status__user_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutUserStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PutUserStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

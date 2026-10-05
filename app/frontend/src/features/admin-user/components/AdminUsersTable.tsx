@@ -56,7 +56,7 @@ export function AdminUsersTable({
           </thead>
           <tbody className="divide-y divide-slate-100 text-sm">
             {users.map((user) => (
-              <tr key={user.email} className="transition-colors hover:bg-slate-50/70">
+              <tr key={user.id} className="transition-colors hover:bg-slate-50/70">
                 <td className="px-4 py-4 sm:px-6">
                   <p className="font-semibold text-slate-900">{user.full_name ?? '—'}</p>
                   <p className="text-xs text-slate-500">{user.email}</p>
