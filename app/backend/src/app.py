@@ -41,6 +41,9 @@ api_router = APIRouter(
 )
 # API include 
 from src.modules.admin.admin_route import admin_router
+from src.modules.auth.router import auth_router
+
 api_router.include_router(health_router) 
 api_router.include_router(admin_router) 
-app.include_router(api_router)
+app.include_router(auth_router)
+app.include_router(api_router)

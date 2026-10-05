@@ -32,7 +32,18 @@ def async_database_url(value: str):
     url = make_url(value)
     if url.get_backend_name() != "postgresql":
         raise ValueError("DATABASE_URL must point to PostgreSQL with PostGIS")
-    return url.set(drivername="postgresql+asyncpg")
+    query = dict(url.query)
+    query.pop("channel_binding", None)
+    if "sslmode" in query:
+        ssl_val = query.pop("sslmode")
+        query["ssl"] = ssl_val if ssl_val != "prefer" else "require"
+        
+    return url.set(drivername="postgresql+asyncpg", query=query)
 
 
 DATABASE_URL = async_database_url(DATABASE_URL)
+
+JWT_SECRET_KEY = get_env_var("JWT_SECRET_KEY", "super-secret-key-for-tour-guide-agent-dev-2026")
+JWT_ALGORITHM = get_env_var("JWT_ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(get_env_var("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))  # Default 24 hours
+
