@@ -9,10 +9,9 @@ from src.api.settings.config import DATABASE_URL
 from src.api.middlewares.request_id_middleware import RequestIDMiddleware
 from src.api.https.exception import register_exception_handlers
 
-# Context manager 
 @asynccontextmanager 
 async def lifespan(app : FastAPI): 
-    # Database checking connection 
+
     try: 
         async with engine.connect() as engine_connection: 
             await engine_connection.execute(text("SELECT 1"))
@@ -21,7 +20,7 @@ async def lifespan(app : FastAPI):
         print(f"Postgres connected failed with: {e}") 
         raise 
     yield
-    # closed connection 
+
     await engine.dispose() 
     print("Postgres disconnected")
 
@@ -35,11 +34,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 register_exception_handlers(app)
 api_router = APIRouter(
     prefix = "/api"
 )
-# API include 
+
 from src.modules.admin.admin_route import admin_router
 from src.modules.auth.auth_route import auth_router
 
