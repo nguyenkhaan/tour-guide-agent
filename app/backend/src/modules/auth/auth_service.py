@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from uuid import UUID
 
 from pwdlib import PasswordHash
@@ -5,11 +6,6 @@ from pwdlib.hashers.bcrypt import BcryptHasher
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.exceptions.error import (
-    BadRequestException,
-    ForbiddenException,
-    UnauthenticatedException,
-)
 from src.bases.enums.jwt_token_type import TokenType
 from src.models.base_model import AccountStatus, UserRole
 from src.models.users_model import Users
@@ -43,7 +39,7 @@ class AuthService:
         existing_user = result.scalar_one_or_none()
 
         if existing_user is not None:
-            raise BadRequestException(message="This email is already registered")
+            raise HTTPException(status_code=400, detail="This email is already registered")
 
         hashed_pwd = self.hash_password(req.password)
         new_user = Users(
@@ -70,12 +66,12 @@ class AuthService:
             or user.password is None
             or not self.verify_password(req.password, user.password)
         ):
-            raise UnauthenticatedException(message="Incorrect email or password")
+            raise HTTPException(status_code=401, detail="Incorrect email or password")
 
         if user.status == AccountStatus.BANNED:
-            raise ForbiddenException(message="Your account has been banned")
+            raise HTTPException(status_code=403, detail="Your account has been banned")
         if user.status == AccountStatus.DISABLED:
-            raise ForbiddenException(message="Your account has been disabled")
+            raise HTTPException(status_code=403, detail="Your account has been disabled")
 
         token_payload = {"sub": str(user.id)}
         access_token = create_jwt_token(token_payload, TokenType.ACCESS_TOKEN)
@@ -89,5 +85,5 @@ class AuthService:
     async def get_user_by_id(self, user_id: UUID) -> UserResponse:
         user = await self.db.get(Users, user_id)
         if user is None:
-            raise UnauthenticatedException(message="User information was not found")
+            raise HTTPException(status_code=401, detail="User information was not found")
         return UserResponse.model_validate(user)
